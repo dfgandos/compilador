@@ -17,6 +17,7 @@ public class TPCompiladores {
 
       // LEITURA DO TECLADO
       leitura = new PushbackReader(new InputStreamReader(System.in));
+      TabelaSimbolos tabela = new TabelaSimbolos();
       try {
 
          // IMPLEMENTAR
@@ -115,6 +116,100 @@ class Simbolo {
 
    public int getTamanho() {
       return this.tamanho;
+   }
+
+}
+
+/*
+   CLASSE TABELA DE SIMBOLOS
+*/
+class TabelaSimbolos {
+
+   private static Hashtable<String, Simbolo> tabelaDeSimbolos;
+
+   TabelaSimbolos() {
+
+      tabelaDeSimbolos = new Hashtable<String, Simbolo>();
+
+      // Larissa terminar
+      adicionar(AlfabetoEnum.CONST, AlfabetoEnum.CONST.getEnumAlfabeto());
+
+   }
+
+   /*
+      REALIZA A PESQUISA DO SIMBOLO DENTRO DA TABELA
+   */
+   public static Simbolo buscar(String lexema){
+      return tabelaDeSimbolos.get(lexema);
+   }
+
+   /*
+      REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
+   */
+   public static Simbolo adicionar(AlfabetoEnum token, String lexema){
+      Simbolo simbolo = new Simbolo(token);
+      tabelaDeSimbolos.put(lexema, simbolo);
+      return simbolo;
+   }
+
+}
+
+/*
+   ENUM PARA OS TIPOS
+*/
+enum TipoEnum {
+   INTEGER, REAL, CHAR, STRING, BOOLEAN, NULL;
+}
+
+/*
+   CLASSE DE TOKENS
+*/
+class Token {
+
+   private AlfabetoEnum tipoToken;
+   private String lexema;
+   private Simbolo simbolo; 
+   private TipoEnum tipoConstante;
+
+   public Token() {
+      this.tipoConstante = null;
+      return;
+   }
+
+   public void limpaLexema() {
+      this.lexema = "";
+   }
+
+   public void setTipoToken(AlfabetoEnum tipoToken) {
+      this.tipoToken = tipoToken;
+   }
+
+   public void setTipoConstante(TipoEnum tipoConstante) {
+      this.tipoConstante = tipoConstante;
+   }
+
+   public TipoEnum getTipoConstante() {
+      return this.tipoConstante;
+   }
+
+   public void setLexema(String lexema) {
+      this.lexema = lexema;
+   }
+
+   public AlfabetoEnum getTipoToken() {
+      return this.tipoToken;
+   }
+
+   public void setSimbolo(Simbolo simbolo) {
+      this.simbolo = simbolo;
+   }
+
+   public Simbolo getSimbolo() {
+      return this.simbolo;
+   }
+
+   public String getLexema() {
+      return this.lexema;
    }
 
 }
