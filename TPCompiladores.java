@@ -155,8 +155,8 @@ class TabelaSimbolos {
    }
 
    /*
-      REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
-   */
+    *  REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
+    */
    public static Simbolo adicionar(AlfabetoEnum token, String lexema){
       Simbolo simbolo = new Simbolo(token);
       tabelaDeSimbolos.put(lexema, simbolo);
@@ -262,16 +262,16 @@ class AnalisadorLexico {
          }
 
          /*
-            IMPLEMENTAÇÃO DO AUTOMATO
-         */
+          *  IMPLEMENTAÇÃO DO AUTOMATO
+          */
          switch(estado) {
             case INICIO:
                lexema = "";
                switch(caracterAnalisado){
                   
                   /*
-                     UNICO CARACTER PARA SER TOKEN
-                  */
+                   *   UNICO CARACTER PARA SER TOKEN
+                   */
 
                   case '(':
                      token.setTipoToken(AlfabetoEnum.ABRE_PARENTESES);
@@ -334,8 +334,8 @@ class AnalisadorLexico {
                   break;
                   
                   /*
-                     DOIS OU MAIS CARACTERES PARA SEREM TOKENS
-                  */
+                   *  DOIS OU MAIS CARACTERES PARA SEREM TOKENS
+                   */
                   
                   case '=':
                      estado = Estados.IGUAL;
@@ -413,11 +413,11 @@ class AnalisadorLexico {
             /* IGUAL_IGUAL */
             case IGUAL:
                switch (caracterAnalisado) {
-                  case '=': // >=
+                  case '=': 
                      token.setTipoToken(AlfabetoEnum.IGUAL_IGUAL);
                      token.setLexema(lexema);
                      break;
-                  default: // >
+                  default: 
                      token.setTipoToken(AlfabetoEnum.IGUAL);
                      token.setLexema(lexema);
                      devolve = true;
@@ -487,7 +487,7 @@ class AnalisadorLexico {
 
             case INICIO_COMENTARIO:
                switch (caracterAnalisado) {
-               case '*': // /*
+               case '*': 
                   estado = Estados.COMENTARIO;
                   break;
                }
