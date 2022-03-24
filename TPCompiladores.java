@@ -23,6 +23,7 @@ public class TPCompiladores {
 
       try {
          tokenLido = AnalisadorLexico.obterProximoToken();
+         System.out.println("Lido: " + tokenLido.getTipoToken());
          System.out.println(linhaPrograma + " linhas compiladas.");
          leitura.close();
 
@@ -185,8 +186,8 @@ class TabelaSimbolos {
    }
 
    /*
-      REALIZA A PESQUISA DO SIMBOLO DENTRO DA TABELA
-   */
+    *  REALIZA A PESQUISA DO SIMBOLO DENTRO DA TABELA
+    */
    public static Simbolo buscar(String lexema){
       return tabelaDeSimbolos.get(lexema);
    }
@@ -268,7 +269,7 @@ class Token {
 enum Estados {
    INICIO, FIM, MENOR, MAIOR, IDENTIFICADOR, INICIO_COMENTARIO, FIM_COMENTARIO, COMENTARIO,
    PRIMEIRO_DECIMAL, DECIMAL, DIGITO, HEXADECIMAL1, DIVISAO,
-   HEXADECIMAL2, CARACTER1, CARACTER2, STRING, ZER0, BOOLEAN, IGUAL, EXCLAMACAO; 
+   HEXADECIMAL2, CARACTER1, CARACTER2, STRING, IGUAL, EXCLAMACAO; 
 } 
 
 /*
@@ -406,9 +407,11 @@ class AnalisadorLexico {
                   estado = Estados.IDENTIFICADOR;
                   break;
 
+                  /* vai sumir
                   case '0':
                   estado = Estados.ZER0;
                   break;
+                  */
 
                   case '\'':
                   estado = Estados.CARACTER1;
@@ -438,7 +441,7 @@ class AnalisadorLexico {
                   default:
                      if (inicioIdentificador(caracterAnalisado)) {
                         estado = Estados.IDENTIFICADOR;
-                     } else if (caracterAnalisado >= '1' && caracterAnalisado <= '9') {
+                     } else if (caracterAnalisado >= '0' && caracterAnalisado <= '9') {
                         estado = Estados.DIGITO;
                      } else {
                         throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema + caracterAnalisado);
@@ -521,7 +524,7 @@ class AnalisadorLexico {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
             break;
-
+            
             case INICIO_COMENTARIO:
                switch (caracterAnalisado) {
                case '*': 
@@ -548,27 +551,12 @@ class AnalisadorLexico {
                   break;
                }
             break;
-
-            // ** ARRUMAR HEXA, TEM QUE SER DIGITO E NÃO POSSUI X ** //
-            case ZER0:
-               if (caracterAnalisado == 'x') {
-                  estado = Estados.HEXADECIMAL1;
-               } else if (caracterAnalisado == '.') {
-                  estado = Estados.PRIMEIRO_DECIMAL;
-               } else if (digito(caracterAnalisado)) {
-                  estado = Estados.DIGITO;
-               } else {
-                  devolve = true;
-                  //token.setTipoToken(AlfabetoEnum.VALOR);
-                  token.setTipoConstante(TipoEnum.INTEGER);
-                  token.setLexema(lexema);
-                  estado = Estados.FIM;
-               }
-            break;
             
             case DIGITO:
                if (caracterAnalisado == '.') {
                   estado = Estados.PRIMEIRO_DECIMAL;
+               } else if (hexadecimal(caracterAnalisado)) {
+                  estado = Estados.HEXADECIMAL1; 
                } else if (!digito(caracterAnalisado)) {
                   devolve = true;
                   //token.setTipoToken(AlfabetoEnum.VALOR);
@@ -580,30 +568,26 @@ class AnalisadorLexico {
                   } catch (NumberFormatException e) {
                      throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                   }
-
-                  estado = Estados.FIM;
+                  estado = Estados.FIM; 
                } else {
                   estado = Estados.DIGITO;
                }
             break;
 
             case HEXADECIMAL1:
-               if (hexadecimal(caracterAnalisado)) {
+               if (hexadecimalH(caracterAnalisado)) {
                   estado = Estados.HEXADECIMAL2;
+               } else if(digito(caracterAnalisado)){
+                  estado = Estados.DIGITO;
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
             break;
 
             case HEXADECIMAL2:
-               if (hexadecimal(caracterAnalisado)) {
-                  //token.setTipoToken(AlfabetoEnum.VALOR);
-                  token.setLexema(lexema);
-                  token.setTipoConstante(TipoEnum.CHAR);
-                  estado = Estados.FIM;
-               } else {
-                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
-               }
+               token.setLexema(lexema);
+               token.setTipoConstante(TipoEnum.CHAR);
+               estado = Estados.FIM;
             break;
 
             case IDENTIFICADOR:
@@ -615,7 +599,6 @@ class AnalisadorLexico {
                      throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                   }
                   estado = Estados.FIM;
-
                }
             break;
 
@@ -630,6 +613,25 @@ class AnalisadorLexico {
                   if (lexema.length() - 2 > 255) {
                      throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                   }
+                  estado = Estados.FIM;
+               } else {
+                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
+               }
+            break;
+
+            case CARACTER1:
+               if (charImprimivel(caracterAnalisado)) {
+                  estado = Estados.CARACTER2;
+               } else {
+                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
+               }
+            break;
+
+            case CARACTER2:
+               if (caracterAnalisado == '\'') {
+                  //token.setTipoToken(AlfabetoEnum.VALOR);
+                  token.setLexema(lexema);
+                  token.setTipoConstante(TipoEnum.CHAR);
                   estado = Estados.FIM;
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
@@ -683,8 +685,6 @@ class AnalisadorLexico {
          token.setSimbolo(simbolo);
          token.setTipoToken(simbolo.getToken());
       }
-       
-      System.out.println("Lexema: " + lexema);
 
       return token;
    }  
@@ -693,10 +693,14 @@ class AnalisadorLexico {
       return (digito(c) || (c >= 'A' && c <= 'F'));
    }
 
+   private static boolean hexadecimalH (char c) {
+      return (c == 'h');
+   }
+
    //arrumar
    private static boolean charImprimivel(char c) {
       return (c == '\t' || (c >= ' ' && c <= '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
-            || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?'));
+         || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?'));
    }
 
    private static boolean charValido(char c) {
@@ -716,13 +720,13 @@ class AnalisadorLexico {
    }
 
    private static boolean inicioIdentificador(char c) {
-         return (letra(c) || c == '_');
+      return (letra(c) || c == '_');
    }
 
    //arrumar
    private static boolean stringValida(char c) {
       return (c == '\t' || c == '\r' || (c >= ' ' && c < '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
-            || (c >= 'a' && c <= '}') || (c >= '(' && c <= '?') || (c == '%') || (c == '&') || (c == '\''));
+         || (c >= 'a' && c <= '}') || (c >= '(' && c <= '?') || (c == '%') || (c == '&') || (c == '\''));
    }
 
 }
