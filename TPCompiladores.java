@@ -12,33 +12,6 @@ public class TPCompiladores {
 
    public static PushbackReader leitura;
    public static int linhaPrograma = 1;
-   public static Token tokenLido;
-   
-   /*
-   GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
-   PG -> {DEC | CMD} EOF
-   DEC -> DEC_V | DEC_C
-   DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
-   DEC_C -> CONST ID = [ [-] VALOR];
-   CMD -> CMD_A | CMD_R | CMD_T | CMD_N | CMD_L | CMD_E
-   CMD_A -> ID ['[' EXP']'] = EXP;
-   CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
-   CMD_T -> if EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')];
-   */
-
-   /*
-   DEFINIÇAO ESTRUTURA ANALISADOR SINTATICO
-   public static void PG() throws ErroPersonalizado, IOException{
-      tokenLido = new Token();
-      while(verificaDec() || verificaCMD()){
-         if(verificaDec){
-            Dec();
-         }else{
-            Cmd();
-         }
-      }
-      casatoken(AlfabetoEnum.EOF);
-   }*/
 
    public static void main(String[] args) {
       Token tokenLido = new Token();
@@ -67,6 +40,97 @@ public class TPCompiladores {
    static public int getLinhaPrograma() {
       return linhaPrograma;
    }
+}
+
+// ANALISAR SINTATICO
+class AnalizadorSintatico extends AnalisadorLexico{
+   /*
+   GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
+   PG -> {DEC | CMD} EOF
+   DEC -> DEC_V | DEC_C
+   DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   DEC_C -> CONST ID = [ [-] VALOR];
+   CMD -> CMD_A | CMD_R | CMD_T | ; | CMD_L | CMD_E
+   CMD_A -> ID ['[' EXP']'] = EXP;
+   CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
+   CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')];
+   */
+
+   public static Token tokenLido;
+   public static String tipoEsperado;
+
+  //ANALISADOR RECEBE O TOKEN
+   public AnalizadorSintatico(){
+     tokenLido = new Token();
+   }
+
+   public void inicializador() throws ErroPersonalizado, IOException{
+     tokenLido = AnalisadorLexico.obterProximoToken();
+     PG();
+   }
+
+   private boolean verificaCMD() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR || tokenLido.getTipoToken() == AlfabetoEnum.WHILE || tokenLido.getTipoToken() == AlfabetoEnum.IF || 
+      tokenLido.getTipoToken() == AlfabetoEnum.READLN || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN || 
+      tokenLido.getTipoToken() == AlfabetoEnum.PONTO_VIRGULA || tokenLido.getTipoToken() == AlfabetoEnum.BEGIN || tokenLido.getTipoToken() == AlfabetoEnum.END || tokenLido.getTipoToken() == AlfabetoEnum.ELSE);
+   }
+
+   private boolean verificaDEC() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER  || tokenLido.getTipoToken() == AlfabetoEnum.REAL || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
+       tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN);
+   }
+
+   private boolean verificaCONST() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.CONST);
+   }
+
+   private boolean verificaVAR() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER  || tokenLido.getTipoToken() == AlfabetoEnum.REAL || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
+       tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN);
+   }
+
+   //PG -> {DEC | CMD} EOF
+   public  void PG() throws ErroPersonalizado, IOException{
+      while(verificaDEC() || verificaCMD()){
+         if(verificaDEC()){
+            DEC();
+         }else{
+            //CMD();
+         }
+      }
+      //casatoken(AlfabetoEnum.EOF);
+   }
+
+   //DEC -> DEC_V | DEC_C
+   public void DEC() throws ErroPersonalizado, IOException{
+      if(verificaCONST()){
+         //DEC_C();
+      } else if(verificaVAR()){
+         DEC_V();
+      }
+   }
+
+   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   public void DEC_V() throws ErroPersonalizado, IOException{
+
+      if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
+         tipoEsperado = "int";
+         //CASATOKEN(INT);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
+         tipoEsperado = "real";
+         //CASATOKEN(REAL);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.STRING){
+         tipoEsperado = "string";
+         //CASATOKEN(STRING);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN){
+         tipoEsperado = "boolean";
+         //CASATOKEN(BOOLEAN);
+      }else{
+         tipoEsperado = "char";
+         //CASATOKEN(CHAR);
+      }
+   }
+   
 }
 
 /*
