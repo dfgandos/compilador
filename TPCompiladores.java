@@ -407,12 +407,6 @@ class AnalisadorLexico {
                   estado = Estados.IDENTIFICADOR;
                   break;
 
-                  /* vai sumir
-                  case '0':
-                  estado = Estados.ZER0;
-                  break;
-                  */
-
                   case '\'':
                   estado = Estados.CARACTER1;
                   break;
@@ -469,7 +463,7 @@ class AnalisadorLexico {
             /* // */
             case DIVISAO:
             switch (caracterAnalisado) {
-               case '=':
+               case '/':
                   token.setTipoToken(AlfabetoEnum.BARRA_BARRA);
                   token.setLexema(lexema);
                   break;
@@ -531,12 +525,12 @@ class AnalisadorLexico {
                   estado = Estados.COMENTARIO;
                   break;
                }
-                break;
+            break;
 
             case COMENTARIO:
                if (caracterAnalisado == '*')
                   estado = Estados.FIM_COMENTARIO;
-               break;
+            break;
 
             case FIM_COMENTARIO:
                switch (caracterAnalisado) {
