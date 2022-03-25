@@ -12,6 +12,33 @@ public class TPCompiladores {
 
    public static PushbackReader leitura;
    public static int linhaPrograma = 1;
+   public static Token tokenLido;
+   
+   /*
+   GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
+   PG -> {DEC | CMD} EOF
+   DEC -> DEC_V | DEC_C
+   DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   DEC_C -> CONST ID = [ [-] VALOR];
+   CMD -> CMD_A | CMD_R | CMD_T | CMD_N | CMD_L | CMD_E
+   CMD_A -> ID ['[' EXP']'] = EXP;
+   CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
+   CMD_T -> if EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')];
+   */
+
+   /*
+   DEFINIÇAO ESTRUTURA ANALISADOR SINTATICO
+   public static void PG() throws ErroPersonalizado, IOException{
+      tokenLido = new Token();
+      while(verificaDec() || verificaCMD()){
+         if(verificaDec){
+            Dec();
+         }else{
+            Cmd();
+         }
+      }
+      casatoken(AlfabetoEnum.EOF);
+   }*/
 
    public static void main(String[] args) {
       Token tokenLido = new Token();
@@ -691,10 +718,16 @@ class AnalisadorLexico {
       return (c == 'h');
    }
 
-   //arrumar
+   /*
    private static boolean charImprimivel(char c) {
       return (c == '\t' || (c >= ' ' && c <= '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
          || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?'));
+   } */
+
+   //validar menor e igual
+   private static boolean charImprimivel(char c) {
+      return (c == '\r' || (c >= ' ' && c <= '"') || c == '_' ||  (c >= '+' && c <='/') || (c >= ':' && c<=';') || (c >= '%' && c <= ')') 
+      || (c >= '>' && c <= ']') || letra(c) || digito(c) || c == '{' || (c == '<' && c == '=') );
    }
 
    private static boolean charValido(char c) {
@@ -717,10 +750,15 @@ class AnalisadorLexico {
       return (letra(c) || c == '_');
    }
 
-   //arrumar
+   /*
    private static boolean stringValida(char c) {
-      return (c == '\t' || c == '\r' || (c >= ' ' && c < '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
+      return (c == '\t' || (c >= ' ' && c < '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
          || (c >= 'a' && c <= '}') || (c >= '(' && c <= '?') || (c == '%') || (c == '&') || (c == '\''));
+   }*/
+
+   private static boolean stringValida(char c) {
+      return (c == '\r' || (c >= ' ' && c <= '"') || c == '_' ||  (c >= '+' && c <='/') || (c >= ':' && c<=';') || (c >= '%' && c <= ')') 
+      || (c >= '>' && c <= ']') || letra(c) || digito(c) || c == '{' || (c == '<' && c == '=') );
    }
 
 }
