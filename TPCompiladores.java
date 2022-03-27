@@ -45,7 +45,8 @@ public class TPCompiladores {
 // ANALISAR SINTATICO
 class AnalizadorSintatico extends AnalisadorLexico {
    /**
-    * GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
+    * GRAMATICA DEFINIDA ATÉ COMANDO DE ESCRITA, NECESSÁRIO COMPLEMENTAR O RESTANTE
+    * E VERIFICAR NULO NO CMD
     * PG -> {DEC | CMD} EOF
     * DEC -> DEC_V | DEC_C
     * DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID
@@ -56,11 +57,8 @@ class AnalizadorSintatico extends AnalisadorLexico {
     * CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
     * CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD}
     * 'END')];
-    * CMD_N -> NOT CMD ; | (TEM A BARRA?) CONFERIR!!!!
-    * CMD_L -> readln '(' id ')' ; (INICIADO PELO COMANDO READLN, FAZENDO A LEITURA
-    * DO ID INDICANDO QUE O PARENTESES É OU NAO TOKEN? )
-    * CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ; (PODE SER UM OU OUTRO,
-    * LISTA DE EXPRESSOES PODENDO TER UMA OU MAIS {})
+    * CMD_L -> readln '(' id ')' ;
+    * CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ;
     **/
 
    public static Token tokenLido;
@@ -143,11 +141,6 @@ class AnalizadorSintatico extends AnalisadorLexico {
       }
    }
 
-   // CMD_N
-   // public void CMD_N() throws ErroPersonalizado, IOException{
-
-   // }
-
    // CMD_L -> readln '(' id ')' ;
    public void CMD_L() throws ErroPersonalizado, IOException {
       if (tokenLido.getTipoToken() == AlfabetoEnum.READLN) {
@@ -175,7 +168,6 @@ class AnalizadorSintatico extends AnalisadorLexico {
       // CASATOKEN(FECHA_PARENTESES);
       // CASATOKEN(PONTO_VIRGULA);
    }
-
 }
 
 /*
