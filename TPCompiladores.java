@@ -44,7 +44,7 @@ public class TPCompiladores {
 
 // ANALISAR SINTATICO
 class AnalizadorSintatico extends AnalisadorLexico {
-   /*
+   /**
     * GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
     * PG -> {DEC | CMD} EOF
     * DEC -> DEC_V | DEC_C
@@ -56,7 +56,12 @@ class AnalizadorSintatico extends AnalisadorLexico {
     * CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
     * CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD}
     * 'END')];
-    */
+    * CMD_N -> NOT CMD ; | (TEM A BARRA?) CONFERIR!!!!
+    * CMD_L -> readln '(' id ')' ; (INICIADO PELO COMANDO READLN, FAZENDO A LEITURA
+    * DO ID INDICANDO QUE O PARENTESES É OU NAO TOKEN? )
+    * CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ; (PODE SER UM OU OUTRO,
+    * LISTA DE EXPRESSOES PODENDO TER UMA OU MAIS {})
+    **/
 
    public static Token tokenLido;
    public static String tipoEsperado;
@@ -120,9 +125,8 @@ class AnalizadorSintatico extends AnalisadorLexico {
    // DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID
    // [ = [-] VALOR ] } ;
    public void DEC_V() throws ErroPersonalizado, IOException {
-
       if (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER) {
-         tipoEsperado = "int";
+         tipoEsperado = "integer";
          // CASATOKEN(INT);
       } else if (tokenLido.getTipoToken() == AlfabetoEnum.REAL) {
          tipoEsperado = "real";
@@ -137,6 +141,39 @@ class AnalizadorSintatico extends AnalisadorLexico {
          tipoEsperado = "char";
          // CASATOKEN(CHAR);
       }
+   }
+
+   // CMD_N
+   // public void CMD_N() throws ErroPersonalizado, IOException{
+
+   // }
+
+   // CMD_L -> readln '(' id ')' ;
+   public void CMD_L() throws ErroPersonalizado, IOException {
+      if (tokenLido.getTipoToken() == AlfabetoEnum.READLN) {
+         // CASATOKEN(READLN);
+         // CASATOKEN(ABRE_PARENTESES);
+         // CASATOEKN(ID);
+         // CASATOKEN(FECHA_PARENTESES);
+         // CASATOKEN(PONTO_VIRGULA);
+      }
+   }
+
+   // CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ;
+   public void CMD_E() throws ErroPersonalizado, IOException {
+      if (tokenLido.getTipoToken() == AlfabetoEnum.WRITE) {
+         // CASATOKEN(WRITE);
+      } else {
+         // CASATOKEN(WRITELN);
+      }
+      // CASATOKEN(ABRE_PARENTESES);
+      // EXP();
+      while (tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
+         // CASATOKEN(VIRGULA);
+         // EXP();
+      }
+      // CASATOKEN(FECHA_PARENTESES);
+      // CASATOKEN(PONTO_VIRGULA);
    }
 
 }
