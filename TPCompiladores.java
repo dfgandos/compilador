@@ -14,16 +14,22 @@ public class TPCompiladores {
    public static int linhaPrograma = 1;
 
    public static void main(String[] args) {
-      Token tokenLido = new Token();
-
+      
       // LEITURA DO TECLADO
       leitura = new PushbackReader(new InputStreamReader(System.in));
       TabelaSimbolos tabela = new TabelaSimbolos();
-      // AnalisadorLexico analisadorLexico = new AnalisadorLexico();
+      AnalisadorLexico analisadorLexico = new AnalisadorLexico();
+      AnalisadorSintatico analisadorSintatico = new AnalisadorSintatico();
 
       try {
-         tokenLido = AnalisadorLexico.obterProximoToken();
-         System.out.println("Lido: " + tokenLido.getTipoToken());
+
+         // TESTE LEXICO
+         //Token tokenLido = new Token();
+         //tokenLido = AnalisadorLexico.obterProximoToken();
+         //System.out.println("Lido: " + tokenLido.getLexema());
+         //System.out.println("Tipo: " + tokenLido.getTipoToken());
+
+         analisadorSintatico.inicializador();
          System.out.println(linhaPrograma + " linhas compiladas.");
          leitura.close();
 
@@ -40,33 +46,37 @@ public class TPCompiladores {
    static public int getLinhaPrograma() {
       return linhaPrograma;
    }
+
 }
 
-// ANALISAR SINTATICO
-class AnalizadorSintatico extends AnalisadorLexico {
-   /**
-    * GRAMATICA DEFINIDA ATÉ COMANDO DE ESCRITA, NECESSÁRIO COMPLEMENTAR O RESTANTE
-    * E VERIFICAR NULO NO CMD
-    * PG -> {DEC | CMD} EOF
-    * DEC -> DEC_V | DEC_C
-    * DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID
-    * [ = [-] VALOR ] } ;
-    * DEC_C -> CONST ID = [ [-] VALOR];
-    * CMD -> CMD_A | CMD_R | CMD_T | ; | CMD_L | CMD_E
-    * CMD_A -> ID ['[' EXP']'] = EXP;
-    * CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
-    * CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD}
-    * 'END')];
-    * CMD_L -> readln '(' id ')' ;
-    * CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ;
-    **/
+/*
+ * ANALISAR SINTATICO
+ */
+class AnalisadorSintatico extends AnalisadorLexico{
+
+   /*
+      GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
+      PG -> {DEC | CMD} EOF
+      DEC -> DEC_V | DEC_C
+      DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = VALOR ] {, ID [ = VALOR ] } ;
+      DEC_C -> CONST ID = [ VALOR];
+      CMD -> CMD_A | CMD_R | CMD_T | ; | CMD_L | CMD_E
+      CMD_A -> ID ['[' EXP']'] = EXP;
+      CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
+      CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')];
+      CMD_L -> READLN '('ID')'';
+      CMD_E -> (WRITE | WRITELN) '(' EXP {, EXP } ')';
+      EXP -> SEXP [( == | != | < | > | <= | >= ) SEXP]
+      SEXP -> [+ | -] T {(+ | - | OR) T}
+      T -> F {(* | AND | / | // | %) F}
+      F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['(' EXP ')'] | CONST
+   */
 
    public static Token tokenLido;
-   public static String tipoEsperado;
 
-   // ANALISADOR RECEBE O TOKEN
-   public AnalizadorSintatico() {
-      tokenLido = new Token();
+   //ANALISADOR RECEBE O TOKEN
+   public AnalisadorSintatico(){
+     tokenLido = new Token();
    }
 
    public void CASATOKEN(AlfabetoEnum tokenEsperado) throws ErroPersonalizado, IOException {
@@ -81,106 +91,323 @@ class AnalizadorSintatico extends AnalisadorLexico {
       } else{
          throw new ErroTokenNaoEsperado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
       }
-   }
+  }
 
-   public void inicializador() throws ErroPersonalizado, IOException {
+   public void inicializador() throws ErroPersonalizado, IOException{
       tokenLido = AnalisadorLexico.obterProximoToken();
       PG();
    }
 
-   private boolean verificaCMD() {
-      return (tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR || tokenLido.getTipoToken() == AlfabetoEnum.WHILE
-            || tokenLido.getTipoToken() == AlfabetoEnum.IF ||
-            tokenLido.getTipoToken() == AlfabetoEnum.READLN || tokenLido.getTipoToken() == AlfabetoEnum.WRITE
-            || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN ||
-            tokenLido.getTipoToken() == AlfabetoEnum.PONTO_VIRGULA || tokenLido.getTipoToken() == AlfabetoEnum.BEGIN
-            || tokenLido.getTipoToken() == AlfabetoEnum.END || tokenLido.getTipoToken() == AlfabetoEnum.ELSE);
+   public boolean verificaCMD() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR || tokenLido.getTipoToken() == AlfabetoEnum.WHILE || tokenLido.getTipoToken() == AlfabetoEnum.IF || 
+      tokenLido.getTipoToken() == AlfabetoEnum.READLN || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN || 
+      tokenLido.getTipoToken() == AlfabetoEnum.BEGIN || tokenLido.getTipoToken() == AlfabetoEnum.END || tokenLido.getTipoToken() == AlfabetoEnum.ELSE);
    }
 
-   private boolean verificaDEC() {
-      return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER || tokenLido.getTipoToken() == AlfabetoEnum.REAL
-            || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
-            tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN);
+   public boolean verificaDEC() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER  || tokenLido.getTipoToken() == AlfabetoEnum.REAL || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
+       tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN ||tokenLido.getTipoToken() == AlfabetoEnum.CONST );
    }
 
-   private boolean verificaCONST() {
-      return (tokenLido.getTipoToken() == AlfabetoEnum.CONST);
+   public boolean verificacCONST(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.CONST);
    }
 
-   private boolean verificaVAR() {
-      return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER || tokenLido.getTipoToken() == AlfabetoEnum.REAL
-            || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
-            tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN);
+
+   public boolean verificaCMDA(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR);
    }
 
-   // PG -> {DEC | CMD} EOF
-   public void PG() throws ErroPersonalizado, IOException {
-      while (verificaDEC() || verificaCMD()) {
-         if (verificaDEC()) {
+   public boolean verificaCMDR(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.WHILE);
+   }
+
+   public boolean verificaCMDT(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.IF);
+   }
+
+   public boolean verificaCMDL(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.READLN);
+   }
+
+   public boolean verificaCMDE(){
+      return(tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN);
+   }
+
+   private boolean verificaOPR() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MENOR
+      || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR || tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL);
+   }
+
+   //PG -> {DEC | CMD} EOF
+   public void PG() throws ErroPersonalizado, IOException{
+      while(verificaDEC() || verificaCMD()){
+         if(verificaCMD()){
+            CMD();
+         }else{
             DEC();
-         } else {
-            // CMD();
          }
       }
-      // casatoken(AlfabetoEnum.EOF);
+      CASATOKEN(AlfabetoEnum.EOF);
    }
 
-   // DEC -> DEC_V | DEC_C
-   public void DEC() throws ErroPersonalizado, IOException {
-      if (verificaCONST()) {
-         // DEC_C();
-      } else if (verificaVAR()) {
+   //DEC -> DEC_V | DEC_C
+   public void DEC() throws ErroPersonalizado, IOException{
+      if(verificacCONST()){
+         DEC_C();
+      }else {
          DEC_V();
       }
    }
 
-   // DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID
-   // [ = [-] VALOR ] } ;
-   public void DEC_V() throws ErroPersonalizado, IOException {
-      if (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER) {
-         tipoEsperado = "integer";
-         // CASATOKEN(INT);
-      } else if (tokenLido.getTipoToken() == AlfabetoEnum.REAL) {
-         tipoEsperado = "real";
-         // CASATOKEN(REAL);
-      } else if (tokenLido.getTipoToken() == AlfabetoEnum.STRING) {
-         tipoEsperado = "string";
-         // CASATOKEN(STRING);
-      } else if (tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN) {
-         tipoEsperado = "boolean";
-         // CASATOKEN(BOOLEAN);
-      } else {
-         tipoEsperado = "char";
-         // CASATOKEN(CHAR);
+   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   public void DEC_V() throws ErroPersonalizado, IOException{
+
+      if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
+         CASATOKEN(AlfabetoEnum.INTEGER);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
+         CASATOKEN(AlfabetoEnum.REAL);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.STRING){
+         CASATOKEN(AlfabetoEnum.STRING);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN){
+         CASATOKEN(AlfabetoEnum.BOOLEAN);
+      } else if(tokenLido.getTipoToken() == AlfabetoEnum.CHAR) {
+         CASATOKEN(AlfabetoEnum.CHAR);
+      }
+
+      CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
+         
+         CASATOKEN(AlfabetoEnum.IGUAL);
+         if (tokenLido.getTipoToken() == AlfabetoEnum.MENOS) {
+            CASATOKEN(AlfabetoEnum.MENOS);
+         }
+         CASATOKEN(AlfabetoEnum.VALOR);
+
+         while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
+            CASATOKEN(AlfabetoEnum.VIRGULA);
+            CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+            if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
+               CASATOKEN(AlfabetoEnum.IGUAL);
+               
+               if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+                  CASATOKEN(AlfabetoEnum.MENOS);
+               }
+               CASATOKEN(AlfabetoEnum.VALOR);
+            }
+         }
+      }
+      CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+   }
+
+   //DEC_C -> CONST ID = [ [-] VALOR];
+   public void DEC_C() throws ErroPersonalizado, IOException{
+      CASATOKEN(AlfabetoEnum.CONST);
+      CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      CASATOKEN(AlfabetoEnum.IGUAL);
+      if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+         CASATOKEN(AlfabetoEnum.MENOS); 
+         CASATOKEN(AlfabetoEnum.VALOR);
+      }
+      CASATOKEN(AlfabetoEnum.VALOR);
+      CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+   }
+
+   //CMD -> CMD_A | CMD_R | CMD_T | CMD_L | CMD_E
+   public void CMD() throws ErroPersonalizado, IOException{
+      
+      if(verificaCMDA()){
+         CMD_A();
+      } else if(verificaCMDR()){
+         CMD_R();
+      }else if(verificaCMDT()){
+         CMD_T();
+      }else if(verificaCMDL()){
+         CMD_L();
+      }else if(verificaCMDE()){
+         CMD_E();
       }
    }
 
-   // CMD_L -> readln '(' id ')' ;
-   public void CMD_L() throws ErroPersonalizado, IOException {
-      if (tokenLido.getTipoToken() == AlfabetoEnum.READLN) {
-         // CASATOKEN(READLN);
-         // CASATOKEN(ABRE_PARENTESES);
-         // CASATOEKN(ID);
-         // CASATOKEN(FECHA_PARENTESES);
-         // CASATOKEN(PONTO_VIRGULA);
+   //CMD_A -> ID ['[' EXP']'] = EXP;
+   public void CMD_A() throws ErroPersonalizado, IOException{
+      CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE){
+         CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
+         EXP();
+         CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
+      }
+      CASATOKEN(AlfabetoEnum.IGUAL);
+      EXP();
+      CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+   }
+
+   //CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END')
+   public void CMD_R() throws ErroPersonalizado, IOException{
+      CASATOKEN(AlfabetoEnum.WHILE);
+      EXP();
+      if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
+         CASATOKEN(AlfabetoEnum.BEGIN);
+         while(verificaCMD1()){
+            CMD();
+         }
+         CASATOKEN(AlfabetoEnum.END);
+      }else{
+         CMD();
       }
    }
 
-   // CMD_E -> (write | writeln) '(' EXP {, EXP } ')' ;
-   public void CMD_E() throws ErroPersonalizado, IOException {
-      if (tokenLido.getTipoToken() == AlfabetoEnum.WRITE) {
-         // CASATOKEN(WRITE);
+   private boolean verificaCMD1() {
+      return (tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR || tokenLido.getTipoToken() == AlfabetoEnum.WHILE
+              || tokenLido.getTipoToken() == AlfabetoEnum.IF || tokenLido.getTipoToken() == AlfabetoEnum.READLN
+              || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN
+              || tokenLido.getTipoToken() == AlfabetoEnum.PONTO_VIRGULA);
+  }
+
+   //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
+   public void CMD_T() throws ErroPersonalizado, IOException{
+      CASATOKEN(AlfabetoEnum.IF);
+      EXP();
+      if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
+         CASATOKEN(AlfabetoEnum.BEGIN);
+         CMD();
+         while(tokenLido.getTipoToken() != AlfabetoEnum.END){
+            CMD();
+         }
+         CASATOKEN(AlfabetoEnum.END);
+      }else{
+         CMD();
+      }
+
+      if(tokenLido.getTipoToken() == AlfabetoEnum.ELSE){
+         CASATOKEN(AlfabetoEnum.BEGIN);
+         CMD();
+         while(tokenLido.getTipoToken() != AlfabetoEnum.END){
+            CMD();
+         }
+         CASATOKEN(AlfabetoEnum.END);
+      }else{
+         CMD();
+      }
+   }
+
+   //CMD_L -> READLN '('ID')'';
+   public void CMD_L() throws ErroPersonalizado, IOException{
+      CASATOKEN(AlfabetoEnum.READLN);
+      CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+      CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+      CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+   }
+
+   //CMD_E -> (WRITE | WRITELN) '(' EXP {, EXP } ')';
+   public void CMD_E() throws ErroPersonalizado, IOException{
+      if(tokenLido.getTipoToken() == AlfabetoEnum.WRITE){
+         CASATOKEN(AlfabetoEnum.WRITE);
       } else {
-         // CASATOKEN(WRITELN);
+         CASATOKEN(AlfabetoEnum.WRITELN);
       }
-      // CASATOKEN(ABRE_PARENTESES);
-      // EXP();
-      while (tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
-         // CASATOKEN(VIRGULA);
-         // EXP();
+      CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+      EXP();
+      if(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA){
+         while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA){
+            CASATOKEN(AlfabetoEnum.VIRGULA);
+            EXP();
+         }
       }
-      // CASATOKEN(FECHA_PARENTESES);
-      // CASATOKEN(PONTO_VIRGULA);
+      CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+      CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+   }  
+
+   //EXP -> SEXP [( == | != | < | > | <= | >= ) SEXP]
+   public void EXP() throws ErroPersonalizado, IOException{
+      SEXP();
+      if(verificaOPR()){
+         if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL){
+            CASATOKEN(AlfabetoEnum.IGUAL_IGUAL);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.MENOR){
+            CASATOKEN(AlfabetoEnum.MENOR);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIOR){
+            CASATOKEN(AlfabetoEnum.MAIOR);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL){
+            CASATOKEN(AlfabetoEnum.MENOR_IGUAL);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL){
+            CASATOKEN(AlfabetoEnum.MAIOR_IGUAL);
+         }
+         SEXP();
+      }
+   }
+
+   //SEXP -> [+ | -] T {(+ | - | OR) T}
+   public void SEXP() throws ErroPersonalizado, IOException{
+      if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+         CASATOKEN(AlfabetoEnum.MENOS);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIS){
+         CASATOKEN(AlfabetoEnum.MAIS);
+      }
+      T();
+
+      while(tokenLido.getTipoToken() == AlfabetoEnum.MENOS || tokenLido.getTipoToken() == AlfabetoEnum.MAIS || tokenLido.getTipoToken() == AlfabetoEnum.OR){
+         if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+            CASATOKEN(AlfabetoEnum.MENOS);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIS){
+            CASATOKEN(AlfabetoEnum.MAIS);
+         }else{
+            CASATOKEN(AlfabetoEnum.OR);
+         }
+         T();
+      }
+   }
+
+   //T -> F {(* | AND | / | // | %) F}
+   public void T() throws ErroPersonalizado, IOException{
+      F();
+      while(tokenLido.getTipoToken() == AlfabetoEnum.MULTIPLICACAO || tokenLido.getTipoToken() == AlfabetoEnum.AND || tokenLido.getTipoToken() == AlfabetoEnum.DIVISAO
+      || tokenLido.getTipoToken() == AlfabetoEnum.BARRA_BARRA || tokenLido.getTipoToken() == AlfabetoEnum.PORCENTAGEM){
+         if(tokenLido.getTipoToken() == AlfabetoEnum.MULTIPLICACAO){
+            CASATOKEN(AlfabetoEnum.MULTIPLICACAO);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.AND){
+            CASATOKEN(AlfabetoEnum.AND);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.DIVISAO){
+            CASATOKEN(AlfabetoEnum.DIVISAO);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.BARRA_BARRA){
+            CASATOKEN(AlfabetoEnum.BARRA_BARRA);
+         }else{
+            CASATOKEN(AlfabetoEnum.PORCENTAGEM);
+         }
+         F();
+      }
+   }
+
+   //F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['(' EXP ')'] | VALOR
+   public void F() throws ErroPersonalizado, IOException{
+      if(tokenLido.getTipoToken() == AlfabetoEnum.NOT){
+         CASATOKEN(AlfabetoEnum.NOT);
+         F();
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
+         CASATOKEN(AlfabetoEnum.INTEGER);
+         CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+         EXP();
+         CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
+         CASATOKEN(AlfabetoEnum.REAL);
+         CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+         EXP();
+         CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR){
+         CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+         if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_PARENTESES){
+            CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+            EXP();
+            CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+         }
+      }else if(tokenLido.getTipoToken() == AlfabetoEnum.VALOR){
+         CASATOKEN(AlfabetoEnum.VALOR);
+      } else {
+         CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+         EXP();
+         CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+      }
    }
 }
 
@@ -275,7 +502,7 @@ class Simbolo {
 }
 
 /*
- * CLASSE TABELA DE SIMBOLOS
+ *  CLASSE TABELA DE SIMBOLOS
  */
 class TabelaSimbolos {
 
@@ -328,16 +555,16 @@ class TabelaSimbolos {
    }
 
    /*
-    * REALIZA A PESQUISA DO SIMBOLO DENTRO DA TABELA
+    *  REALIZA A PESQUISA DO SIMBOLO DENTRO DA TABELA
     */
-   public static Simbolo buscar(String lexema) {
+   public static Simbolo buscar(String lexema){
       return tabelaDeSimbolos.get(lexema);
    }
 
    /*
-    * REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
+    *  REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
     */
-   public static Simbolo adicionar(AlfabetoEnum token, String lexema) {
+   public static Simbolo adicionar(AlfabetoEnum token, String lexema){
       Simbolo simbolo = new Simbolo(token);
       tabelaDeSimbolos.put(lexema, simbolo);
       return simbolo;
@@ -346,20 +573,20 @@ class TabelaSimbolos {
 }
 
 /*
- * ENUM PARA OS TIPOS
+ *  ENUM PARA OS TIPOS
  */
 enum TipoEnum {
    INTEGER, REAL, CHAR, STRING, BOOLEAN, NULL;
 }
 
 /*
- * CLASSE DE TOKENS
+ *  CLASSE DE TOKENS
  */
 class Token {
 
    private AlfabetoEnum tipoToken;
    private String lexema;
-   private Simbolo simbolo;
+   private Simbolo simbolo; 
    private TipoEnum tipoConstante;
 
    public Token() {
@@ -891,4 +1118,3 @@ class AnalisadorLexico {
    }
 
 }
-
