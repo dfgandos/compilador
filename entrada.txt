@@ -1,0 +1,21 @@
+{* comentario nao eh token *}
+
+integer n=1;
+string nome;
+boolean teste;
+const MAXITER=10;
+t[2] = 0;
+char hx = DDh;
+real te = 1.1;
+char c = 'c';
+string tes = "string";
+
+write("Digite");
+readln(nome);
+
+real percentual;
+while n<=MAXITER begin
+  percentual=10;
+  writeln(percentual,": Ola' ",nome);
+  n=n+1;
+end
