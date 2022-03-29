@@ -1,5 +1,6 @@
 {* comentario nao eh token *}
 
+integer a = 10, g = 20, f = 30;
 integer n=1;
 string nome;
 boolean teste;
@@ -9,13 +10,15 @@ char hx = DDh;
 real te = 1.1;
 char c = 'c';
 string tes = "string";
+real flutuante = .4;
+tes[0] = 's';
 
 write("Digite");
 readln(nome);
 
 real percentual;
 while n<=MAXITER begin
-  percentual=10;
+  percentual=10//te;
   writeln(percentual,": Ola' ",nome);
   n=n+1;
 end

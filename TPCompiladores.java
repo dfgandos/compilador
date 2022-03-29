@@ -226,6 +226,8 @@ class AnalisadorSintatico extends AnalisadorLexico{
          CMD_L();
       }else if(verificaCMDE()){
          CMD_E();
+      } else {
+         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
       }
    }
 
