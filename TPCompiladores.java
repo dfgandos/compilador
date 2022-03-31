@@ -1,12 +1,11 @@
 /*
-   Ciência da Computação - PUC Minas
    Professor: Alexei Machado
    Disciplina: Compiladores
    Alunos: Darlan Francisco, Larissa Leite e Ygor Melo
 */
 
 import java.util.*;
-import java.io.*;
+import java.io.*; 
 
 public class TPCompiladores {
 
@@ -20,19 +19,19 @@ public class TPCompiladores {
       TabelaSimbolos tabela = new TabelaSimbolos();
       AnalisadorLexico analisadorLexico = new AnalisadorLexico();
       AnalisadorSintatico analisadorSintatico = new AnalisadorSintatico();
-
+   
       try {
-
+      
          // TESTE LEXICO
          //Token tokenLido = new Token();
          //tokenLido = AnalisadorLexico.obterProximoToken();
          //System.out.println("Lido: " + tokenLido.getLexema());
          //System.out.println("Tipo: " + tokenLido.getTipoToken());
-
+      
          analisadorSintatico.inicializador();
          System.out.println(linhaPrograma + " linhas compiladas.");
          leitura.close();
-
+      
       } catch (Exception e) {
          String message = e.getMessage();
          System.out.println(message);
@@ -55,7 +54,6 @@ public class TPCompiladores {
 class AnalisadorSintatico extends AnalisadorLexico{
 
    /*
-      GRAMATICA DEFINIDA ATÉ COMANDO DE TESTE, NECESSÁRIO COMPLEMENTAR O RESTANTE
       PG -> {DEC | CMD} EOF
       DEC -> DEC_V | DEC_C
       DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = VALOR ] {, ID [ = VALOR ] } ;
@@ -76,7 +74,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
 
    //ANALISADOR RECEBE O TOKEN
    public AnalisadorSintatico(){
-     tokenLido = new Token();
+      tokenLido = new Token();
    }
 
    public void CASATOKEN(AlfabetoEnum tokenEsperado) throws ErroPersonalizado, IOException {
@@ -84,14 +82,14 @@ class AnalisadorSintatico extends AnalisadorLexico{
       //System.out.println("TK E: " + tokenEsperado);
       //System.out.println("TK L: "+tokenLido.getTipoToken() );
       if (tokenLido.getTipoToken() == tokenEsperado) {
-          if (tokenLido.getTipoToken() != AlfabetoEnum.EOF)
-              tokenLido = AnalisadorLexico.obterProximoToken();
+         if (tokenLido.getTipoToken() != AlfabetoEnum.EOF)
+            tokenLido = AnalisadorLexico.obterProximoToken();
       } else if (tokenLido.getTipoToken() == AlfabetoEnum.EOF){
-          throw new ErroFimDeArquivoNaoEsperado(TPCompiladores.getLinhaPrograma());
+         throw new ErroFimDeArquivoNaoEsperado(TPCompiladores.getLinhaPrograma());
       } else{
          throw new ErroTokenNaoEsperado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
       }
-  }
+   }
 
    public void inicializador() throws ErroPersonalizado, IOException{
       tokenLido = AnalisadorLexico.obterProximoToken();
@@ -100,13 +98,13 @@ class AnalisadorSintatico extends AnalisadorLexico{
 
    public boolean verificaCMD() {
       return (tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR || tokenLido.getTipoToken() == AlfabetoEnum.WHILE || tokenLido.getTipoToken() == AlfabetoEnum.IF || 
-      tokenLido.getTipoToken() == AlfabetoEnum.READLN || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN || 
-      tokenLido.getTipoToken() == AlfabetoEnum.BEGIN || tokenLido.getTipoToken() == AlfabetoEnum.END || tokenLido.getTipoToken() == AlfabetoEnum.ELSE);
+         tokenLido.getTipoToken() == AlfabetoEnum.READLN || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN || 
+         tokenLido.getTipoToken() == AlfabetoEnum.BEGIN || tokenLido.getTipoToken() == AlfabetoEnum.END || tokenLido.getTipoToken() == AlfabetoEnum.ELSE);
    }
 
    public boolean verificaDEC() {
       return (tokenLido.getTipoToken() == AlfabetoEnum.INTEGER  || tokenLido.getTipoToken() == AlfabetoEnum.REAL || tokenLido.getTipoToken() == AlfabetoEnum.CHAR ||
-       tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN ||tokenLido.getTipoToken() == AlfabetoEnum.CONST );
+         tokenLido.getTipoToken() == AlfabetoEnum.STRING || tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN ||tokenLido.getTipoToken() == AlfabetoEnum.CONST );
    }
 
    public boolean verificacCONST(){
@@ -136,7 +134,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
 
    private boolean verificaOPR() {
       return (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MENOR
-      || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR || tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL);
+         || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR || tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL);
    }
 
    //PG -> {DEC | CMD} EOF
@@ -162,7 +160,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
 
    //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
    public void DEC_V() throws ErroPersonalizado, IOException{
-
+   
       if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
          CASATOKEN(AlfabetoEnum.INTEGER);
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
@@ -174,7 +172,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
       } else if(tokenLido.getTipoToken() == AlfabetoEnum.CHAR) {
          CASATOKEN(AlfabetoEnum.CHAR);
       }
-
+   
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
       if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
          
@@ -183,7 +181,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
             CASATOKEN(AlfabetoEnum.MENOS);
          }
          CASATOKEN(AlfabetoEnum.VALOR);
-
+      
          while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
             CASATOKEN(AlfabetoEnum.VIRGULA);
             CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
@@ -226,8 +224,6 @@ class AnalisadorSintatico extends AnalisadorLexico{
          CMD_L();
       }else if(verificaCMDE()){
          CMD_E();
-      } else {
-         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
       }
    }
 
@@ -264,7 +260,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
               || tokenLido.getTipoToken() == AlfabetoEnum.IF || tokenLido.getTipoToken() == AlfabetoEnum.READLN
               || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN
               || tokenLido.getTipoToken() == AlfabetoEnum.PONTO_VIRGULA);
-  }
+   }
 
    //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
    public void CMD_T() throws ErroPersonalizado, IOException{
@@ -280,7 +276,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
       }else{
          CMD();
       }
-
+   
       if(tokenLido.getTipoToken() == AlfabetoEnum.ELSE){
          CASATOKEN(AlfabetoEnum.BEGIN);
          CMD();
@@ -348,7 +344,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
          CASATOKEN(AlfabetoEnum.MAIS);
       }
       T();
-
+   
       while(tokenLido.getTipoToken() == AlfabetoEnum.MENOS || tokenLido.getTipoToken() == AlfabetoEnum.MAIS || tokenLido.getTipoToken() == AlfabetoEnum.OR){
          if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
             CASATOKEN(AlfabetoEnum.MENOS);
@@ -447,7 +443,7 @@ class ErroTokenNaoEsperado extends ErroPersonalizado {
 }
 
 /*
- * ENUM REPRESENTA O ALFABETO DA LINGUAGEM COM A SUA NUMERAÇÃO DE TOKENS
+ * ENUM REPRESENTA O ALFABETO DA LINGUAGEM COM A SUA NUMERACAO DE TOKENS
  */
 enum AlfabetoEnum {
 
@@ -478,7 +474,7 @@ enum AlfabetoEnum {
 }
 
 /*
- * CLASSE PARA CRIAÇÃO DOS SIMBOLOS
+ * CLASSE PARA CRIACAO DOS SIMBOLOS
  */
 class Simbolo {
 
@@ -511,9 +507,9 @@ class TabelaSimbolos {
    private static Hashtable<String, Simbolo> tabelaDeSimbolos;
 
    TabelaSimbolos() {
-
+   
       tabelaDeSimbolos = new Hashtable<String, Simbolo>();
-
+   
       adicionar(AlfabetoEnum.CONST, AlfabetoEnum.CONST.getEnumAlfabeto());
       adicionar(AlfabetoEnum.INTEGER, AlfabetoEnum.INTEGER.getEnumAlfabeto());
       adicionar(AlfabetoEnum.CHAR, AlfabetoEnum.CHAR.getEnumAlfabeto());
@@ -564,7 +560,7 @@ class TabelaSimbolos {
    }
 
    /*
-    *  REALIZA A INSERÇÃO DO SIMBOLO NA TABELA
+    *  REALIZA A INSERCAO DO SIMBOLO NA TABELA
     */
    public static Simbolo adicionar(AlfabetoEnum token, String lexema){
       Simbolo simbolo = new Simbolo(token);
@@ -655,7 +651,7 @@ class AnalisadorLexico {
       Token token = new Token();
       boolean devolve;
       String lexema = "";
-
+   
       while(estado != Estados.FIM){
          devolve = false;
          byteLido = TPCompiladores.leitura.read();
@@ -663,15 +659,15 @@ class AnalisadorLexico {
          if(byteLido == -1 && estado != Estados.INICIO) {
             throw new ErroFimDeArquivoNaoEsperado(TPCompiladores.getLinhaPrograma());
          }
-
+      
          caracterAnalisado = (char) byteLido;
-
+      
          if(!charValido(caracterAnalisado)) {
             throw new ErroCaractereInvalido(TPCompiladores.getLinhaPrograma());
          }
-
+      
          /*
-          *  IMPLEMENTAÇÃO DO AUTOMATO
+          *  IMPLEMENTACAO DO AUTOMATO
           */
          switch(estado) {
             case INICIO:
@@ -681,66 +677,66 @@ class AnalisadorLexico {
                   /*
                    *   UNICO CARACTER PARA SER TOKEN
                    */
-
+               
                   case '(':
                      token.setTipoToken(AlfabetoEnum.ABRE_PARENTESES);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case ')':
                      token.setTipoToken(AlfabetoEnum.FECHA_PARENTESES);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case ',':
                      token.setTipoToken(AlfabetoEnum.VIRGULA);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case '+':
                      token.setTipoToken(AlfabetoEnum.MAIS);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case '-':
                      token.setTipoToken(AlfabetoEnum.MENOS);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case '*':
                      token.setTipoToken(AlfabetoEnum.MULTIPLICACAO);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case ';':
                      token.setTipoToken(AlfabetoEnum.PONTO_VIRGULA);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case '%':
                      token.setTipoToken(AlfabetoEnum.PORCENTAGEM);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case '[':
                      token.setTipoToken(AlfabetoEnum.ABRE_COLCHETE);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
-
+                     break;
+               
                   case ']':
                      token.setTipoToken(AlfabetoEnum.FECHA_COLCHETE);
                      token.setLexema(lexema);
                      estado = Estados.FIM;
-                  break;
+                     break;
                   
                   /*
                    *  DOIS OU MAIS CARACTERES PARA SEREM TOKENS
@@ -748,54 +744,54 @@ class AnalisadorLexico {
                   
                   case '=':
                      estado = Estados.IGUAL;
-                  break;
-
+                     break;
+               
                   case '<':
                      estado = Estados.MENOR;
-                  break;
-
+                     break;
+               
                   case '>':
                      estado = Estados.MAIOR;
-                  break;
-
+                     break;
+               
                   case '!':
                      estado = Estados.EXCLAMACAO;
-                  break;
+                     break;
                   
                   case '/':
                      estado = Estados.DIVISAO;
-                  break;
-
+                     break;
+               
                   case '{':
                      estado = Estados.INICIO_COMENTARIO; 
-                  break;
-
+                     break;
+               
                   case '.':
                      estado = Estados.PRIMEIRO_DECIMAL;
-                  break;
-
+                     break;
+               
                   case '_': 
-                  estado = Estados.IDENTIFICADOR;
-                  break;
-
+                     estado = Estados.IDENTIFICADOR;
+                     break;
+               
                   case '\'':
-                  estado = Estados.CARACTER1;
-                  break;
+                     estado = Estados.CARACTER1;
+                     break;
                   
                   case '"':
-                  estado = Estados.STRING;
-                  break;
+                     estado = Estados.STRING;
+                     break;
                   
                   case (char) -1:
-                  token.setTipoToken(AlfabetoEnum.EOF);
-                  estado = Estados.FIM;
-                  break;
-
+                     token.setTipoToken(AlfabetoEnum.EOF);
+                     estado = Estados.FIM;
+                     break;
+               
                   case ' ':
                   case '\r':
                   case '\n':
                   case '\t':
-                      break;
+                     break;
                   
                   default:
                      if (inicioIdentificador(caracterAnalisado)) {
@@ -806,74 +802,74 @@ class AnalisadorLexico {
                      } else {
                         throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema + caracterAnalisado);
                      }
-                  break;
+                     break;
                }
-            break;
+               break;
             
             /* IGUAL_IGUAL */
             case IGUAL:
-            switch (caracterAnalisado) {
-               case '=':
-                   token.setTipoToken(AlfabetoEnum.IGUAL_IGUAL);
-                   token.setLexema(lexema);
-                   break;
-               default: 
-                   token.setTipoToken(AlfabetoEnum.IGUAL);
-                   token.setLexema(lexema);
-                   devolve = true;
-                   break;
+               switch (caracterAnalisado) {
+                  case '=':
+                     token.setTipoToken(AlfabetoEnum.IGUAL_IGUAL);
+                     token.setLexema(lexema);
+                     break;
+                  default: 
+                     token.setTipoToken(AlfabetoEnum.IGUAL);
+                     token.setLexema(lexema);
+                     devolve = true;
+                     break;
                }
                estado = Estados.FIM;
-            break;
+               break;
             
             /* // */
             case DIVISAO:
-            switch (caracterAnalisado) {
-               case '/':
-                  token.setTipoToken(AlfabetoEnum.BARRA_BARRA);
-                  token.setLexema(lexema);
-                  break;
-               default:
-                  token.setTipoToken(AlfabetoEnum.DIVISAO);
-                  token.setLexema(lexema);
-                  devolve = true;
-                  break;
+               switch (caracterAnalisado) {
+                  case '/':
+                     token.setTipoToken(AlfabetoEnum.BARRA_BARRA);
+                     token.setLexema(lexema);
+                     break;
+                  default:
+                     token.setTipoToken(AlfabetoEnum.DIVISAO);
+                     token.setLexema(lexema);
+                     devolve = true;
+                     break;
                }
                estado = Estados.FIM;
-            break;
-
+               break;
+         
             /* <= */
             case MENOR:
-            switch (caracterAnalisado) {
-               case '=': 
-                  token.setTipoToken(AlfabetoEnum.MENOR_IGUAL);
-                  token.setLexema(lexema);
-                  break;
-               default:
-                  token.setTipoToken(AlfabetoEnum.MAIOR);
-                  token.setLexema(lexema);
-                  devolve = true;
-                  break;
+               switch (caracterAnalisado) {
+                  case '=': 
+                     token.setTipoToken(AlfabetoEnum.MENOR_IGUAL);
+                     token.setLexema(lexema);
+                     break;
+                  default:
+                     token.setTipoToken(AlfabetoEnum.MAIOR);
+                     token.setLexema(lexema);
+                     devolve = true;
+                     break;
                }
                estado = Estados.FIM;
-            break;
-
+               break;
+         
             /* >= */
             case MAIOR:
                switch (caracterAnalisado) {
-               case '=': 
-                  token.setTipoToken(AlfabetoEnum.MAIOR_IGUAL);
-                  token.setLexema(lexema);
-                  break;
-               default: 
-                  token.setTipoToken(AlfabetoEnum.MAIOR);
-                  token.setLexema(lexema);
-                  devolve = true;
-                  break;
+                  case '=': 
+                     token.setTipoToken(AlfabetoEnum.MAIOR_IGUAL);
+                     token.setLexema(lexema);
+                     break;
+                  default: 
+                     token.setTipoToken(AlfabetoEnum.MAIOR);
+                     token.setLexema(lexema);
+                     devolve = true;
+                     break;
                }
                estado = Estados.FIM;
-            break;
-
+               break;
+         
             /* != */
             case EXCLAMACAO:
                if (caracterAnalisado == '=') { 
@@ -883,34 +879,34 @@ class AnalisadorLexico {
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
+               break;
             
             case INICIO_COMENTARIO:
-               switch (caracterAnalisado) {
-               case '*': 
+               if (caracterAnalisado == '*') {
                   estado = Estados.COMENTARIO;
-                  break;
+               } else {
+                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
-
+               break;
+         
             case COMENTARIO:
                if (caracterAnalisado == '*')
                   estado = Estados.FIM_COMENTARIO;
-            break;
-
+               break;
+         
             case FIM_COMENTARIO:
                switch (caracterAnalisado) {
-               case '}':
-                  estado = Estados.INICIO;
-                  break;
-               case '*':
-                  /* CONTINUAÇÃO DA LEITURA */
-                  break;
-               default:
-                  estado = Estados.COMENTARIO;
-                  break;
+                  case '}':
+                     estado = Estados.INICIO;
+                     break;
+                  case '*':
+                  /* CONTINUACAO DA LEITURA */
+                     break;
+                  default:
+                     estado = Estados.COMENTARIO;
+                     break;
                }
-            break;
+               break;
             
             case DIGITO:
                if (caracterAnalisado == '.') {
@@ -922,7 +918,7 @@ class AnalisadorLexico {
                   token.setTipoToken(AlfabetoEnum.VALOR);
                   token.setLexema(lexema);
                   token.setTipoConstante(TipoEnum.INTEGER);
-
+               
                   try {
                      Integer.parseInt(lexema);
                   } catch (NumberFormatException e) {
@@ -932,8 +928,8 @@ class AnalisadorLexico {
                } else {
                   estado = Estados.DIGITO;
                }
-            break;
-
+               break;
+         
             case HEXA_ID:
                if(letraID2(caracterAnalisado)){
                   estado = Estados.IDENTIFICADOR;
@@ -948,8 +944,8 @@ class AnalisadorLexico {
                   }
                   estado = Estados.FIM;
                }
-            break;
-
+               break;
+         
             case HEXADECIMAL1:
                if (hexadecimalH(caracterAnalisado)) {
                   estado = Estados.HEXADECIMAL2;
@@ -961,21 +957,26 @@ class AnalisadorLexico {
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
+               break;
             
             case HEXADECIMAL2:
-               devolve = true;
-               token.setTipoToken(AlfabetoEnum.VALOR);
-               token.setLexema(lexema);
-               token.setTipoConstante(TipoEnum.CHAR);
-               estado = Estados.FIM;
-            break;
-
+               if(digito(caracterAnalisado) || charValido(caracterAnalisado)){
+                  estado = Estados.IDENTIFICADOR;
+               } else{
+                  devolve = true;
+                  token.setTipoToken(AlfabetoEnum.VALOR);
+                  token.setLexema(lexema);
+                  token.setTipoConstante(TipoEnum.CHAR);
+                  estado = Estados.FIM;
+               
+               }
+               break;
+         
             case IDENTIFICADOR:
                if(hexadecimal(caracterAnalisado)){
                   estado = Estados.HEXADECIMAL1;
                }
-               if (fimIdentificador(caracterAnalisado)) {
+               else if (fimIdentificador(caracterAnalisado)) {
                   // o caracter lido deve ser devolvido
                   devolve = true;
                   token.setTipoToken(AlfabetoEnum.IDENTIFICADOR);
@@ -984,8 +985,8 @@ class AnalisadorLexico {
                   }
                   estado = Estados.FIM;
                }
-            break;
-
+               break;
+         
             case STRING:
                if (stringValida(caracterAnalisado)) {
                   estado = Estados.STRING;
@@ -1001,16 +1002,16 @@ class AnalisadorLexico {
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
-
+               break;
+         
             case CARACTER1:
                if (charImprimivel(caracterAnalisado)) {
                   estado = Estados.CARACTER2;
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
-
+               break;
+         
             case CARACTER2:
                if (caracterAnalisado == '\'') {
                   token.setTipoToken(AlfabetoEnum.VALOR);
@@ -1020,8 +1021,8 @@ class AnalisadorLexico {
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
-            break;
-
+               break;
+         
             case PRIMEIRO_DECIMAL:
                if (digito(caracterAnalisado)) {
                   estado = Estados.DECIMAL;
@@ -1043,33 +1044,33 @@ class AnalisadorLexico {
                   }
                   estado = Estados.FIM;
                }
-            break;
-
+               break;
+         
             default:
-            break;
+               break;
          }
-
+      
          if (devolve) {
             TPCompiladores.leitura.unread(byteLido);
          } else {
-               lexema += caracterAnalisado;
-               if (caracterAnalisado == '\n') {
-                  TPCompiladores.incrementarLinha();
-               }
+            lexema += caracterAnalisado;
+            if (caracterAnalisado == '\n') {
+               TPCompiladores.incrementarLinha();
+            }
          }
       }
-
+   
       token.setLexema(lexema);
-
+   
       if (token.getTipoToken() == AlfabetoEnum.IDENTIFICADOR) {
          Simbolo simbolo = TabelaSimbolos.buscar(lexema);
-   
+      
          if (simbolo == null)
             simbolo = TabelaSimbolos.adicionar(AlfabetoEnum.IDENTIFICADOR, lexema);
          token.setSimbolo(simbolo);
          token.setTipoToken(simbolo.getToken());
       }
-
+   
       return token;
    }  
 
@@ -1082,8 +1083,10 @@ class AnalisadorLexico {
    }
    
    private static boolean charImprimivel(char c) {
+            
+   
       return (c == '\t' || (c >= ' ' && c <= '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
-         || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?')) || (c == '@');
+         || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?')) || (c == '@' || c == '\n' || c == '\r');
    }
 
    private static boolean charValido(char c) {
@@ -1116,7 +1119,7 @@ class AnalisadorLexico {
 
    private static boolean stringValida(char c) {
       return (c == '\t' ||c == '\r' || (c >= ' ' && c < '"') || c == '_' ||  (c >= '+' && c <='/') || (c >= ':' && c<=';') || (c >= '%' && c <= ')') 
-      || (c >= '>' && c <= ']') || letra(c) || digito(c) || c == '{' || (c == '<' || c == '=') );
+         || (c >= '>' && c <= ']') || letra(c) || digito(c) || c == '{' || (c == '<' || c == '=') );
    }
 
 }

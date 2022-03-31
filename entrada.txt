@@ -1,24 +1,15 @@
-{* comentario nao eh token *}
+{* Exêmplo de Programa na linguagem L *}
 
-integer a = 10, g = 20, f = 30;
-integer n=1;
+integer n=.1;
 string nome;
-boolean teste;
 const MAXITER=10;
-t[2] = 0;
-char hx = DDh;
-real te = 1.1;
-char c = 'c';
-string tes = "string";
-real flutuante = .4;
-tes[0] = 's';
 
-write("Digite");
+write("Digite seu nome: ");
 readln(nome);
 
 real percentual;
 while n<=MAXITER begin
-  percentual=10//te;
+  percentual=real(n)/MAXITER;
   writeln(percentual,": Ola' ",nome);
   n=n+1;
 end
