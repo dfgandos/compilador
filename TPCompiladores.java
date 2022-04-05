@@ -80,7 +80,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
    public void CASATOKEN(AlfabetoEnum tokenEsperado) throws ErroPersonalizado, IOException {
       /* TESTE CASATOKEN */
       //System.out.println("TK E: " + tokenEsperado);
-      //System.out.println("TK L: "+tokenLido.getTipoToken() );
+      //System.out.println("TK L: " + tokenLido.getTipoToken());
       if (tokenLido.getTipoToken() == tokenEsperado) {
          if (tokenLido.getTipoToken() != AlfabetoEnum.EOF)
             tokenLido = AnalisadorLexico.obterProximoToken();
@@ -211,7 +211,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
    }
 
-   //CMD -> CMD_A | CMD_R | CMD_T | CMD_L | CMD_E
+   //CMD -> CMD_A | CMD_R | CMD_T | CMD_L | CMD_E | ;
    public void CMD() throws ErroPersonalizado, IOException{
       
       if(verificaCMDA()){
@@ -224,6 +224,8 @@ class AnalisadorSintatico extends AnalisadorLexico{
          CMD_L();
       }else if(verificaCMDE()){
          CMD_E();
+      } else {
+         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
       }
    }
 
@@ -1006,6 +1008,7 @@ class AnalisadorLexico {
          
             case CARACTER1:
                if (charImprimivel(caracterAnalisado)) {
+                  //System.out.println("Lexema: "+ caracterAnalisado);
                   estado = Estados.CARACTER2;
                } else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
@@ -1086,11 +1089,11 @@ class AnalisadorLexico {
             
    
       return (c == '\t' || (c >= ' ' && c <= '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
-         || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?')) || (c == '@' || c == '\n' || c == '\r');
+         || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?')) || (c == '@');
    }
 
    private static boolean charValido(char c) {
-      return charImprimivel(c) || c == '\n' || c == '\r' || c == (char) -1;
+      return charImprimivel(c) || c == '\n' || c == '\r' || c == '\t' || c == (char) -1;
    }
 
    private static boolean letra(char c) {
@@ -1118,7 +1121,7 @@ class AnalisadorLexico {
    }
 
    private static boolean stringValida(char c) {
-      return (c == '\t' ||c == '\r' || (c >= ' ' && c < '"') || c == '_' ||  (c >= '+' && c <='/') || (c >= ':' && c<=';') || (c >= '%' && c <= ')') 
+      return (c == '\n' || c == '\t' ||c == '\r' || (c >= ' ' && c < '"') || c == '_' ||  (c >= '+' && c <='/') || (c >= ':' && c<=';') || (c >= '%' && c <= ')') 
          || (c >= '>' && c <= ']') || letra(c) || digito(c) || c == '{' || (c == '<' || c == '=') );
    }
 
