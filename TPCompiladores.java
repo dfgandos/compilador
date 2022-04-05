@@ -396,10 +396,10 @@ class AnalisadorSintatico extends AnalisadorLexico{
          CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR){
          CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
-         if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_PARENTESES){
-            CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+         if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE){
+            CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
             EXP();
-            CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
+            CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
          }
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.VALOR){
          CASATOKEN(AlfabetoEnum.VALOR);
