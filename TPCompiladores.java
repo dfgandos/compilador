@@ -213,8 +213,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
 
    //CMD -> CMD_A | CMD_R | CMD_T | CMD_L | CMD_E | ;
    public void CMD() throws ErroPersonalizado, IOException{
-      
-      if(verificaCMDA()){
+      if(verificaCMDA()){ 
          CMD_A();
       } else if(verificaCMDR()){
          CMD_R();
@@ -225,7 +224,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
       }else if(verificaCMDE()){
          CMD_E();
       } else {
-         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+         CASATOKEN(AlfabetoEnum.EOF);
       }
    }
 
@@ -249,7 +248,7 @@ class AnalisadorSintatico extends AnalisadorLexico{
       if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
          CASATOKEN(AlfabetoEnum.BEGIN);
          while(verificaCMD1()){
-            CMD();
+            CMD(); 
          }
          CASATOKEN(AlfabetoEnum.END);
       }else{
@@ -280,12 +279,17 @@ class AnalisadorSintatico extends AnalisadorLexico{
       }
    
       if(tokenLido.getTipoToken() == AlfabetoEnum.ELSE){
-         CASATOKEN(AlfabetoEnum.BEGIN);
-         CMD();
-         while(tokenLido.getTipoToken() != AlfabetoEnum.END){
+         CASATOKEN(AlfabetoEnum.ELSE);
+         if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
+            CASATOKEN(AlfabetoEnum.BEGIN);
+            CMD();
+            while(tokenLido.getTipoToken() != AlfabetoEnum.END){
+               CMD();
+            }
+            CASATOKEN(AlfabetoEnum.END);
+         }else{
             CMD();
          }
-         CASATOKEN(AlfabetoEnum.END);
       }else{
          CMD();
       }
@@ -655,13 +659,15 @@ class AnalisadorLexico {
       String lexema = "";
    
       while(estado != Estados.FIM){
+         
          devolve = false;
          byteLido = TPCompiladores.leitura.read();
+
          
          if(byteLido == -1 && estado != Estados.INICIO) {
             throw new ErroFimDeArquivoNaoEsperado(TPCompiladores.getLinhaPrograma());
          }
-      
+         
          caracterAnalisado = (char) byteLido;
       
          if(!charValido(caracterAnalisado)) {
@@ -679,7 +685,6 @@ class AnalisadorLexico {
                   /*
                    *   UNICO CARACTER PARA SER TOKEN
                    */
-               
                   case '(':
                      token.setTipoToken(AlfabetoEnum.ABRE_PARENTESES);
                      token.setLexema(lexema);

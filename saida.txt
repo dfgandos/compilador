@@ -1,2 +1,2 @@
-11
-token nao esperado [<].
+5
+lexema nao identificado [A0].
