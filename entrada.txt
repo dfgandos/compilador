@@ -1,1 +1,3 @@
-string x="teste";
+const x = 10;
+const y = 20;
+const x = 2;

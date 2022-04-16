@@ -57,7 +57,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
       PG -> {DEC | CMD} EOF
       DEC -> DEC_V | DEC_C
       DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = VALOR ] {, ID [ = VALOR ] } ;
-      DEC_C -> CONST ID = [ VALOR];
+      DEC_C -> CONST ID = [ [-] VALOR];
       CMD -> CMD_A | CMD_R | CMD_T | ; | CMD_L | CMD_E
       CMD_A -> ID ['[' EXP']'] = EXP;
       CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
@@ -158,6 +158,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
    //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID (1)(2) [ = [-] VALOR ] {, ID [ = [-] VALOR (3)(4) ] } ;
    public void DEC_V() throws ErroPersonalizado, IOException{
 
       TipoEnum tipoVariavel;
@@ -273,15 +274,38 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
    //DEC_C -> CONST ID = [ [-] VALOR];
+   //DEC_C -> CONST ID (5) = [ [-] VALOR];
    public void DEC_C() throws ErroPersonalizado, IOException{
+      boolean negacao = false;
+      Token constante;
+      Token tokenID;
+
       CASATOKEN(AlfabetoEnum.CONST);
+
+      tokenID = tokenLido;
+
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
-      CASATOKEN(AlfabetoEnum.IGUAL);
-      if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
-         CASATOKEN(AlfabetoEnum.MENOS); 
-         CASATOKEN(AlfabetoEnum.VALOR);
+
+      if(tokenID.getSimbolo().getTipoClasse() != null){
+         throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
       }
+
+      CASATOKEN(AlfabetoEnum.IGUAL);
+
+      if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+         negacao = true;
+         CASATOKEN(AlfabetoEnum.MENOS); 
+      }
+
+      constante = tokenLido;
       CASATOKEN(AlfabetoEnum.VALOR);
+
+      if(negacao && constante.getTipoConstante() != TipoEnum.INTEGER && constante.getTipoConstante() != TipoEnum.REAL){
+         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+      }
+
+      tokenID.getSimbolo().setTipoClasse(ClasseEnum.CONSTANTE);
+      tokenID.getSimbolo().setTipoDados(constante.getTipoConstante());
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
    }
 
