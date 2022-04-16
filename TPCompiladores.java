@@ -51,7 +51,7 @@ public class TPCompiladores {
 /*
  * ANALISAR SINTATICO
  */
-class AnalisadorSintatico extends AnalisadorLexico{
+class AnalisadorSintatico extends AnalisadorLexico {
 
    /*
       PG -> {DEC | CMD} EOF
@@ -448,6 +448,31 @@ class ErroTokenNaoEsperado extends ErroPersonalizado {
    }
 }
 
+class ErroIdentificadorJaDeclarado extends ErroPersonalizado {
+   public ErroIdentificadorJaDeclarado(int linhaPrograma, String lexema) {
+      super(linhaPrograma + "\nidentificador ja declarado [" + lexema + "].");
+   }
+}
+
+class ErroClasseIdentificadorIncompativel extends ErroPersonalizado {
+   public ErroClasseIdentificadorIncompativel(int linhaPrograma, String lexema) {
+      super(linhaPrograma + "\nclasse de identificador incompativel [" + lexema + "].");
+   }
+}
+
+class ErroTiposIncompativeis extends ErroPersonalizado {
+   public ErroTiposIncompativeis(int linhaPrograma) {
+      super(linhaPrograma + "\ntipos incompativeis.");
+   }
+}
+
+class ErroIdentificadorNaoDeclarado extends ErroPersonalizado {
+   public ErroIdentificadorNaoDeclarado(int linhaPrograma, String lexema) {
+      super(linhaPrograma + "\nidentificador nao declarado [" + lexema + "].");
+   }
+}
+
+
 /*
  * ENUM REPRESENTA O ALFABETO DA LINGUAGEM COM A SUA NUMERACAO DE TOKENS
  */
@@ -581,6 +606,24 @@ class TabelaSimbolos {
  */
 enum TipoEnum {
    INTEGER, REAL, CHAR, STRING, BOOLEAN, NULL;
+}
+
+/*
+ * ENUM PARA AS CLASSES
+ */
+enum ClasseEnum {
+   VARIAVEL, CONSTANTE;
+}
+
+/*
+ *  CLASSE PARA A ALTERACAO DE VARIAVIES PELA REFERENCIA
+ */
+class Referencia<T> {
+   public T referencia;
+
+   public Referencia(T referencia) {
+       this.referencia = referencia;
+   }
 }
 
 /*
@@ -1092,7 +1135,6 @@ class AnalisadorLexico {
    
    private static boolean charImprimivel(char c) {
             
-   
       return (c == '\t' || (c >= ' ' && c <= '"') || (c >= 'A' && c <= ']') || c == '/' || c == '_'
          || (c >= 'a' && c <= '}') || (c >= '%' && c <= '?')) || (c == '@');
    }

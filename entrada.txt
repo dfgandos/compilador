@@ -1,15 +1,3 @@
 {* Exemplo de Programa na linguagem L *}
 
-integer A0h1=0;
-string nome;
-const MAXITER=A0;
-
-write("Digite seu nome: ");
-readln(nome);
-
-real percentual;
-while n<=MAXITER begin
-  percentual=real(n)/MAXITER;
-  writeln(percentual,": Ola' ",nome);
-  n=n+1;
-end
+integer n='
