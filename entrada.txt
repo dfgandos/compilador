@@ -1,3 +1,1 @@
-{* Exemplo de Programa na linguagem L *}
-
-integer n='
+string x="teste";

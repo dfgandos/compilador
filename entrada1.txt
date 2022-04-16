@@ -1,3 +1,0 @@
-while n+1<=MAXITER begin
-    percentual=real(n)/MAXITER;
-end

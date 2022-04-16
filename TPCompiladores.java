@@ -111,7 +111,6 @@ class AnalisadorSintatico extends AnalisadorLexico {
       return(tokenLido.getTipoToken() == AlfabetoEnum.CONST);
    }
 
-
    public boolean verificaCMDA(){
       return(tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR);
    }
@@ -160,38 +159,113 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
    //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
    public void DEC_V() throws ErroPersonalizado, IOException{
-   
-      if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
-         CASATOKEN(AlfabetoEnum.INTEGER);
-      }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
-         CASATOKEN(AlfabetoEnum.REAL);
-      }else if(tokenLido.getTipoToken() == AlfabetoEnum.STRING){
-         CASATOKEN(AlfabetoEnum.STRING);
-      }else if(tokenLido.getTipoToken() == AlfabetoEnum.BOOLEAN){
-         CASATOKEN(AlfabetoEnum.BOOLEAN);
-      } else if(tokenLido.getTipoToken() == AlfabetoEnum.CHAR) {
-         CASATOKEN(AlfabetoEnum.CHAR);
+
+      TipoEnum tipoVariavel;
+      Token tokenID;
+      boolean negacao = false;
+
+      switch (tokenLido.getTipoToken()) {
+         case INTEGER:
+            tipoVariavel = TipoEnum.INTEGER;
+            CASATOKEN(AlfabetoEnum.INTEGER);
+         break;
+
+         case REAL:
+            tipoVariavel = TipoEnum.REAL;
+            CASATOKEN(AlfabetoEnum.REAL);
+         break;
+
+         case CHAR:
+            tipoVariavel = TipoEnum.CHAR;
+            CASATOKEN(AlfabetoEnum.CHAR);
+         break;
+
+         case BOOLEAN:
+            tipoVariavel = TipoEnum.BOOLEAN;
+            CASATOKEN(AlfabetoEnum.BOOLEAN);
+         break;
+
+         default:
+            tipoVariavel = TipoEnum.STRING;
+            CASATOKEN(AlfabetoEnum.STRING);
+         break;
       }
-   
+
+      tokenID = tokenLido;
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+
+      if(tokenID.getSimbolo().getTipoClasse() != null){
+         throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
+      }
+
+      tokenID.getSimbolo().setTipoClasse(ClasseEnum.VARIAVEL);
+      tokenID.getSimbolo().setTipoDados(tipoVariavel);
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
-         
+   
          CASATOKEN(AlfabetoEnum.IGUAL);
+
          if (tokenLido.getTipoToken() == AlfabetoEnum.MENOS) {
             CASATOKEN(AlfabetoEnum.MENOS);
+            negacao = true;
          }
+
+         Token tokenConstante = tokenLido;
          CASATOKEN(AlfabetoEnum.VALOR);
-      
+
+         if(negacao && tokenConstante.getTipoConstante() != TipoEnum.INTEGER && 
+            tokenConstante.getTipoConstante() != TipoEnum.REAL){
+            throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+         }
+
+         tokenID.getSimbolo().setTamanho(tokenConstante.getTamanhoConstante());
+         
+         if(!(tipoVariavel == TipoEnum.REAL && tokenConstante.getTipoConstante()  == TipoEnum.INTEGER)){
+            if(tipoVariavel != tokenConstante.getTipoConstante()){
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            }
+         }  
+
          while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
+            
+            negacao = false;
+            
             CASATOKEN(AlfabetoEnum.VIRGULA);
+
+            tokenID = tokenLido;
             CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+
+            if(tokenID.getSimbolo().getTipoClasse()!= null){
+               throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
+            }
+
+            //NOVO ID, ATRIBUICAO DE CLASSE E TIPOS
+            tokenID.getSimbolo().setTipoClasse(ClasseEnum.VARIAVEL);
+            tokenID.getSimbolo().setTipoDados(tipoVariavel);
+
             if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
                CASATOKEN(AlfabetoEnum.IGUAL);
-               
+         
                if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
                   CASATOKEN(AlfabetoEnum.MENOS);
+                  negacao = true;
                }
+
+               Token tokenConstante2 = tokenLido;
                CASATOKEN(AlfabetoEnum.VALOR);
+
+               if(negacao && tokenConstante2.getTipoConstante() != TipoEnum.INTEGER &&
+                  tokenConstante2.getTipoConstante() != TipoEnum.REAL){
+                  throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+               }
+
+               if(!(tipoVariavel == TipoEnum.REAL && tokenConstante2.getTipoConstante() == TipoEnum.INTEGER)){
+                  if(tipoVariavel != tokenConstante2.getTipoConstante()){
+                     throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+                  }
+               }
+               tokenID.getSimbolo().setTamanho(tokenConstante2.getTamanhoConstante());
+
             }
          }
       }
@@ -510,10 +584,15 @@ enum AlfabetoEnum {
 class Simbolo {
 
    private AlfabetoEnum token;
+   private ClasseEnum tipoClasse;
+   private TipoEnum tipoDados;
    private int tamanho;
+   private long endereco;
 
    Simbolo(AlfabetoEnum token) {
       this.token = token;
+      this.tipoClasse = null;
+      this.tipoDados = TipoEnum.NULL;
    }
 
    public AlfabetoEnum getToken() {
@@ -526,6 +605,30 @@ class Simbolo {
 
    public int getTamanho() {
       return this.tamanho;
+   }
+
+   public ClasseEnum getTipoClasse() {
+      return this.tipoClasse;
+   }
+
+   public void setTipoClasse(ClasseEnum tipoClasse) {
+      this.tipoClasse = tipoClasse;
+   }
+
+   public TipoEnum getTipoDados() {
+      return this.tipoDados;
+   }
+
+   public void setTipoDados(TipoEnum tipo) {
+      this.tipoDados = tipo;
+   }
+
+   public void setEndereco(long endereco) {
+      this.endereco = endereco;
+   }
+
+   public long getEndereco() {
+      return this.endereco;
    }
 
 }
@@ -676,6 +779,21 @@ class Token {
    public String getLexema() {
       return this.lexema;
    }
+
+   public int getTamanhoConstante() {
+      switch (tipoConstante) {
+      case BOOLEAN:
+      case CHAR:
+         return 1;
+      case INTEGER:
+      case REAL:
+         return 4;
+      case STRING:
+         return lexema.length() - 1;
+      default:
+         return 0;
+      }
+  }
 
 }
 
