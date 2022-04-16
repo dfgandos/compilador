@@ -287,7 +287,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
 
       if(tokenID.getSimbolo().getTipoClasse() != null){
-         throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
+         throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
       }
 
       CASATOKEN(AlfabetoEnum.IGUAL);
