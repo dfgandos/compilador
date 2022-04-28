@@ -1138,7 +1138,7 @@ class AnalisadorLexico {
                }
                break;
          
-               case HEXADECIMAL1:
+            case HEXADECIMAL1:
                if (hexadecimalH(caracterAnalisado)) {
                   estado = Estados.HEXADECIMAL2;
                } else if(letra(caracterAnalisado)) {
@@ -1152,14 +1152,15 @@ class AnalisadorLexico {
                break;
             
             case HEXADECIMAL2:
-               if(letra(caracterAnalisado) ||digito(caracterAnalisado) ){
+               if(digito(caracterAnalisado) || charValido(caracterAnalisado)){
                   estado = Estados.IDENTIFICADOR;
-               } else {
+               } else{
                   devolve = true;
                   token.setTipoToken(AlfabetoEnum.VALOR);
                   token.setLexema(lexema);
                   token.setTipoConstante(TipoEnum.CHAR);
                   estado = Estados.FIM;
+               
                }
                break;
          

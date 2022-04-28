@@ -1,2 +1,1 @@
-3
-identificador ja declarado [x].
+1 linhas compiladas.
