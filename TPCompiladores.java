@@ -1138,29 +1138,28 @@ class AnalisadorLexico {
                }
                break;
          
-            case HEXADECIMAL1:
-               if (hexadecimalH(caracterAnalisado)) {
-                  estado = Estados.HEXADECIMAL2;
-               } else if(letra(caracterAnalisado)) {
-                  estado = Estados.IDENTIFICADOR;
-               }
-               else if(digito(caracterAnalisado)){
-                  estado = Estados.DIGITO;
-               } else {
-                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
-               }
-               break;
+               case HEXADECIMAL1:
+                  if (hexadecimalH(caracterAnalisado)) {
+                     estado = Estados.HEXADECIMAL2;
+                  } else if(letra(caracterAnalisado)) {
+                     estado = Estados.IDENTIFICADOR;
+                  }
+                  else if(digito(caracterAnalisado)){
+                     estado = Estados.DIGITO;
+                  } else {
+                     throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
+                  }
+                  break;
             
             case HEXADECIMAL2:
-               if(digito(caracterAnalisado) || charValido(caracterAnalisado)){
+               if(letra(caracterAnalisado) ||digito(caracterAnalisado) ){
                   estado = Estados.IDENTIFICADOR;
-               } else{
+               } else {
                   devolve = true;
                   token.setTipoToken(AlfabetoEnum.VALOR);
                   token.setLexema(lexema);
                   token.setTipoConstante(TipoEnum.CHAR);
                   estado = Estados.FIM;
-               
                }
                break;
          
