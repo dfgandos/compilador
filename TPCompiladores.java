@@ -346,16 +346,62 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
    //CMD_A -> ID ['[' EXP']'] = EXP;
-   public void CMD_A() throws ErroPersonalizado, IOException{
+   //CMD_A -> ID (7)(8) ['[' EXP (9)']'] = EXP (10)(11);
+   private void CMD_A() throws ErroPersonalizado, IOException {
+      TipoEnum tipoVariavel = tokenLido.getSimbolo().getTipoDados();
+      Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
+      Referencia<Integer> tamanho = new Referencia<>(0);
+      Referencia<Long> endereco = new Referencia<>(0L);
+      boolean atribuicaoString = false;
+      long temporario = 0L;
+
+      // Verificação compatibilidade de classe. O token lido deve ser da classe
+      // variavel
+      if (tokenLido.getSimbolo().getTipoClasse() == ClasseEnum.CONSTANTE)
+          throw new ErroClasseIdentificadorIncompativel(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
+
+      // Verifica se o identificador foi declarado
+      if (tipoVariavel == TipoEnum.NULL)
+          throw new ErroIdentificadorNaoDeclarado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
+
+      // Guarda o token do identificador
+      Token tokenIdentificador = tokenLido;
+
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
-      if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE){
-         CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
-         //EXP();
-         CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
+
+      if (tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE) {
+          atribuicaoString = true;
+          if (tipoVariavel != TipoEnum.STRING)
+              throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+              CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
+
+
+          EXP(tipoExp, tamanho, endereco);
+
+          if (tipoExp.referencia != TipoEnum.INTEGER)
+              throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+            CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
+
+          // Caso ocorra acesso a posicao da string, a expressao devera ter o tipo char
+          // (id devera ser do tipo string)
+          tipoVariavel = TipoEnum.CHAR;
+
+          temporario = novoEnderecoTemporarios(tamanho.referencia);
       }
+
       CASATOKEN(AlfabetoEnum.IGUAL);
-      //EXP();
+      EXP(tipoExp, tamanho, endereco);
+
+      // Identificadores de variáveis reais podem receber números inteiros
+      if (tipoExp.referencia != tipoVariavel
+              && !(tipoVariavel == TipoEnum.REAL && tipoExp.referencia == TipoEnum.INTEGER)) {
+          throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+      }
+
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+      
    }
 
    //CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END')
