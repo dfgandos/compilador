@@ -11,6 +11,7 @@ public class TPCompiladores {
 
    public static PushbackReader leitura;
    public static int linhaPrograma = 1;
+   public static long proximoTemporarioLivre = 0;
 
    public static void main(String[] args) {
       
@@ -70,6 +71,23 @@ class AnalisadorSintatico extends AnalisadorLexico {
       F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['(' EXP ')'] | CONST
    */
 
+   /* ACOES SEMANTICAS  
+      PG -> {DEC | CMD} EOF
+      DEC -> DEC_V | DEC_C
+      DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID(1)(2) [ = VALOR ] {, ID [ = VALOR (3)(4)] } ;
+      DEC_C -> CONST ID (5) = [ VALOR];
+      CMD -> CMD_A | CMD_R | CMD_T | ; | CMD_L | CMD_E
+      CMD_A -> ID (7)(8) ['[' EXP (9)']'] = EXP (10)(11);
+      CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END');
+      CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')];
+      CMD_L -> READLN '('ID')'';
+      CMD_E -> (WRITE | WRITELN) '(' EXP {, EXP } ')';
+      EXP -> SEXP (12) [( == | != | < | > | <= | >= ) SEXP (13)]
+      SEXP -> [+ | -] T (3)(14) {(+ | - | OR) T (15)}
+      T -> F (16) {(* | AND | / | // | %) F (17)}
+      F -> NOT F (18)| INTEGER '(' EXP ')'| REAL '(' EXP ')' | '(' EXP ')'(19) | ID (7)(21) ['(' EXP (9) ')'] | CONST (20)
+   */
+
    public static Token tokenLido;
 
    //ANALISADOR RECEBE O TOKEN
@@ -90,6 +108,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
          throw new ErroTokenNaoEsperado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
       }
    }
+
 
    public void inicializador() throws ErroPersonalizado, IOException{
       tokenLido = AnalisadorLexico.obterProximoToken();
@@ -131,8 +150,8 @@ class AnalisadorSintatico extends AnalisadorLexico {
       return(tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN);
    }
 
-   private boolean verificaOPR() {
-      return (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MENOR
+   private boolean verificaOPR() { 
+      return (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MENOR || tokenLido.getTipoToken() == AlfabetoEnum.DIFERENTE 
          || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR || tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL);
    }
 
@@ -322,7 +341,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
       }else if(verificaCMDE()){
          CMD_E();
       } else {
-         CASATOKEN(AlfabetoEnum.EOF);
+         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
       }
    }
 
@@ -331,18 +350,25 @@ class AnalisadorSintatico extends AnalisadorLexico {
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
       if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE){
          CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
-         EXP();
+         //EXP();
          CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
       }
       CASATOKEN(AlfabetoEnum.IGUAL);
-      EXP();
+      //EXP();
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
    }
 
    //CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END')
    public void CMD_R() throws ErroPersonalizado, IOException{
       CASATOKEN(AlfabetoEnum.WHILE);
-      EXP();
+      Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
+      Referencia<Integer> tamanho = new Referencia<>(0);
+      Referencia<Long> endereco = new Referencia<>(0L);
+      EXP(tipoExp, tamanho, endereco);
+
+      if (tipoExp.referencia != TipoEnum.BOOL)
+         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
          CASATOKEN(AlfabetoEnum.BEGIN);
          while(verificaCMD1()){
@@ -359,12 +385,20 @@ class AnalisadorSintatico extends AnalisadorLexico {
               || tokenLido.getTipoToken() == AlfabetoEnum.IF || tokenLido.getTipoToken() == AlfabetoEnum.READLN
               || tokenLido.getTipoToken() == AlfabetoEnum.WRITE || tokenLido.getTipoToken() == AlfabetoEnum.WRITELN
               || tokenLido.getTipoToken() == AlfabetoEnum.PONTO_VIRGULA);
-   }
+  }
 
    //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
    public void CMD_T() throws ErroPersonalizado, IOException{
       CASATOKEN(AlfabetoEnum.IF);
-      EXP();
+      Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
+      Referencia<Integer> tamanho = new Referencia<>(0);
+      Referencia<Long> endereco = new Referencia<>(0L);
+
+      EXP(tipoExp, tamanho, endereco);
+
+      if (tipoExp.referencia != TipoEnum.BOOL)
+         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
          CASATOKEN(AlfabetoEnum.BEGIN);
          CMD();
@@ -397,24 +431,48 @@ class AnalisadorSintatico extends AnalisadorLexico {
    public void CMD_L() throws ErroPersonalizado, IOException{
       CASATOKEN(AlfabetoEnum.READLN);
       CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
+      TipoEnum tipoIdentificador = tokenLido.getSimbolo().getTipoDados();
+      Token tokenIdentificador = tokenLido;
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      if (tokenIdentificador.getSimbolo().getTipoClasse() == ClasseEnum.CONSTANTE)
+         throw new ErroClasseIdentificadorIncompativel(TPCompiladores.getLinhaPrograma(),
+         tokenIdentificador.getLexema());
+
+      if (tipoIdentificador == TipoEnum.NULL)
+         throw new ErroIdentificadorNaoDeclarado(TPCompiladores.getLinhaPrograma(), tokenIdentificador.getLexema());
+
       CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
    }
 
    //CMD_E -> (WRITE | WRITELN) '(' EXP {, EXP } ')';
    public void CMD_E() throws ErroPersonalizado, IOException{
+      boolean ehNovaLinha = false;
       if(tokenLido.getTipoToken() == AlfabetoEnum.WRITE){
          CASATOKEN(AlfabetoEnum.WRITE);
       } else {
          CASATOKEN(AlfabetoEnum.WRITELN);
+         ehNovaLinha = true;
       }
+
+      Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
+      Referencia<Integer> tamanho = new Referencia<>(0);
+      Referencia<Long> endereco = new Referencia<>(0L);
+
       CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
-      EXP();
+      EXP(tipoExp, tamanho, endereco);
+
+      if (tipoExp.referencia == TipoEnum.BOOL)
+         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA){
          while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA){
             CASATOKEN(AlfabetoEnum.VIRGULA);
-            EXP();
+            EXP(tipoExp, tamanho, endereco);
+
+            if (tipoExp.referencia == TipoEnum.BOOL)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
          }
       }
       CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
@@ -422,94 +480,259 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }  
 
    //EXP -> SEXP [( == | != | < | > | <= | >= ) SEXP]
-   public void EXP() throws ErroPersonalizado, IOException{
-      SEXP();
+   //EXP -> SEXP (12) [( == | != | < | > | <= | >= ) SEXP (13)]
+   public void EXP(Referencia<TipoEnum> tipo, Referencia<Integer> tamanho, Referencia<Long> endereco) throws ErroPersonalizado, IOException{
+      SEXP(tipo, tamanho, endereco);
+      String tempExp = enderecoParaHexa(endereco.referencia);
+
+      Referencia<TipoEnum> tipoExpsEsq = new Referencia<>(tipo.referencia);
+      Referencia<TipoEnum> tipoExpsDir = new Referencia<>(TipoEnum.NULL);
+
+      AlfabetoEnum operador;
+      boolean comparacaoFloat = false;
+      String rotuloVerdadeiro;
+      String rotuloFim;
+      String rotuloFalso;
+
       if(verificaOPR()){
          if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL_IGUAL){
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.IGUAL_IGUAL);
+         }else if(tokenLido.getTipoToken() == AlfabetoEnum.DIFERENTE){
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            CASATOKEN(AlfabetoEnum.DIFERENTE);
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.MENOR){
-            CASATOKEN(AlfabetoEnum.MENOR);
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+                    CASATOKEN(AlfabetoEnum.MENOR);
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIOR){
-            CASATOKEN(AlfabetoEnum.MAIOR);
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+                    CASATOKEN(AlfabetoEnum.MAIOR);
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL){
-            CASATOKEN(AlfabetoEnum.MENOR_IGUAL);
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+                    CASATOKEN(AlfabetoEnum.MENOR_IGUAL);
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL){
+            if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.MAIOR_IGUAL);
          }
-         SEXP();
+         SEXP(tipoExpsDir, tamanho, endereco);
+
+         if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.CHAR) {
+            if (tipoExpsEsq.referencia != tipoExpsDir.referencia)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+         } else if (tipoExpsEsq.referencia == TipoEnum.INTEGER || tipoExpsEsq.referencia == TipoEnum.REAL) {
+            if (tipoExpsDir.referencia != TipoEnum.INTEGER && tipoExpsDir.referencia != TipoEnum.REAL)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+         }
+
+         endereco.referencia = novoEnderecoTemporarios(4);
+
+         tipo.referencia = TipoEnum.BOOL;
+         tamanho.referencia = 4;
       }
    }
 
    //SEXP -> [+ | -] T {(+ | - | OR) T}
-   public void SEXP() throws ErroPersonalizado, IOException{
+   public void SEXP(Referencia<TipoEnum> tipo, Referencia<Integer> tamanho, Referencia<Long> endereco) throws ErroPersonalizado, IOException{    
+      boolean ehNumero = false;
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
          CASATOKEN(AlfabetoEnum.MENOS);
+         ehNumero = true;
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIS){
          CASATOKEN(AlfabetoEnum.MAIS);
+         ehNumero = true;
       }
-      T();
-   
+
+      T(tipo, tamanho, endereco);
+      long tempExps = endereco.referencia;
+      long enderecoTemp;
+
+      if (ehNumero && tipo.referencia != TipoEnum.INTEGER && tipo.referencia != TipoEnum.REAL)
+            throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+      Referencia<TipoEnum> tipoExpDir = new Referencia<>(TipoEnum.NULL);
       while(tokenLido.getTipoToken() == AlfabetoEnum.MENOS || tokenLido.getTipoToken() == AlfabetoEnum.MAIS || tokenLido.getTipoToken() == AlfabetoEnum.OR){
+         enderecoTemp = novoEnderecoTemporarios(4);
          if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
+            if (tipo.referencia != TipoEnum.INTEGER && tipo.referencia != TipoEnum.REAL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
             CASATOKEN(AlfabetoEnum.MENOS);
+            T(tipoExpDir, tamanho, endereco);
+
+            if (tipo.referencia != tipoExpDir.referencia
+               && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
+               && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+            if (tipoExpDir.referencia == TipoEnum.REAL)
+               tipo.referencia = TipoEnum.REAL;
+
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.MAIS){
+            if (tipo.referencia != TipoEnum.INTEGER && tipo.referencia != TipoEnum.REAL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            
             CASATOKEN(AlfabetoEnum.MAIS);
+            T(tipoExpDir, tamanho, endereco);
+            if (tipo.referencia != tipoExpDir.referencia
+                        && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
+                        && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+            if (tipoExpDir.referencia == TipoEnum.REAL)
+               tipo.referencia = TipoEnum.REAL;
          }else{
+            if (tipo.referencia != TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
             CASATOKEN(AlfabetoEnum.OR);
+            T(tipoExpDir, tamanho, endereco);
+
+            if (tipoExpDir.referencia != TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            
          }
-         T();
+
+         tempExps = enderecoTemp;
+         //T(tipo, tamanho, endereco);
       }
+      endereco.referencia = tempExps;
    }
 
    //T -> F {(* | AND | / | // | %) F}
-   public void T() throws ErroPersonalizado, IOException{
-      F();
+   public void T(Referencia<TipoEnum> tipo, Referencia<Integer> tamanho, Referencia<Long> endereco) throws ErroPersonalizado, IOException{
+      F(tipo, tamanho, endereco);
+      Referencia<TipoEnum> tipoExpDir = new Referencia<>(TipoEnum.NULL);
+
       while(tokenLido.getTipoToken() == AlfabetoEnum.MULTIPLICACAO || tokenLido.getTipoToken() == AlfabetoEnum.AND || tokenLido.getTipoToken() == AlfabetoEnum.DIVISAO
       || tokenLido.getTipoToken() == AlfabetoEnum.BARRA_BARRA || tokenLido.getTipoToken() == AlfabetoEnum.PORCENTAGEM){
          if(tokenLido.getTipoToken() == AlfabetoEnum.MULTIPLICACAO){
+            if (tipo.referencia != TipoEnum.INTEGER && tipo.referencia != TipoEnum.REAL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.MULTIPLICACAO);
+            F(tipoExpDir, tamanho, endereco);
+            if (tipo.referencia != tipoExpDir.referencia
+                        && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
+                        && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+            if (tipoExpDir.referencia == TipoEnum.REAL)
+               tipo.referencia = TipoEnum.REAL;
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.AND){
+            if (tipo.referencia != TipoEnum.BOOL)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.AND);
+            F(tipoExpDir, tamanho, endereco);
+            if (tipoExpDir.referencia != TipoEnum.BOOL)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.DIVISAO){
+            if (tipo.referencia != TipoEnum.INTEGER && tipo.referencia != TipoEnum.REAL)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.DIVISAO);
+            F(tipoExpDir, tamanho, endereco);
+
+            if (tipo.referencia != tipoExpDir.referencia
+                        && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
+                        && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+            if (tipoExpDir.referencia == TipoEnum.REAL)
+               tipo.referencia = TipoEnum.REAL;
+
+            if (tipo.referencia == TipoEnum.INTEGER && tipoExpDir.referencia == TipoEnum.INTEGER)
+               tipo.referencia = TipoEnum.REAL;
+
          }else if(tokenLido.getTipoToken() == AlfabetoEnum.BARRA_BARRA){
             CASATOKEN(AlfabetoEnum.BARRA_BARRA);
          }else{
+            if (tipo.referencia != TipoEnum.INTEGER)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.PORCENTAGEM);
+            F(tipoExpDir, tamanho, endereco);
+            if (tipo.referencia != tipoExpDir.referencia)
+                    throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
          }
-         F();
+         //F(tipoExpDir, tamanho, endereco);
       }
    }
 
    //F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['(' EXP ')'] | VALOR
-   public void F() throws ErroPersonalizado, IOException{
+   public void F(Referencia<TipoEnum> tipo, Referencia<Integer> tamanho, Referencia<Long> endereco) throws ErroPersonalizado, IOException{
+      boolean conversao = false;
+      Referencia<TipoEnum> tipoExpDir = new Referencia<>(TipoEnum.NULL);
+      Token identificador;
+      Token valor;
+      Referencia<Integer> tamanhoExp = new Referencia<>(0);
+      Referencia<Long> enderecoExp = new Referencia<>(0L);
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.NOT){
          CASATOKEN(AlfabetoEnum.NOT);
-         F();
+         F(tipo, tamanho, endereco);
+         if (tipo.referencia != TipoEnum.BOOL)
+            throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.INTEGER){
+         tipo.referencia = TipoEnum.INTEGER;
+         conversao = true;
          CASATOKEN(AlfabetoEnum.INTEGER);
          CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
-         EXP();
+         EXP(tipoExpDir, tamanhoExp, enderecoExp);
          CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.REAL){
          CASATOKEN(AlfabetoEnum.REAL);
+         tipo.referencia = TipoEnum.REAL;
+         conversao = true;
          CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
-         EXP();
+         EXP(tipoExpDir, tamanhoExp, enderecoExp);
          CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.IDENTIFICADOR){
+         if (tokenLido.getSimbolo().getTipoClasse() == null)
+            throw new ErroIdentificadorNaoDeclarado(TPCompiladores.getLinhaPrograma(), tokenLido.getLexema());
+            identificador = tokenLido;
+            tipo.referencia = identificador.getSimbolo().getTipoDados();
+            tamanho.referencia = identificador.getSimbolo().getTamanho();
+            endereco.referencia = identificador.getSimbolo().getEndereco();
          CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
          if(tokenLido.getTipoToken() == AlfabetoEnum.ABRE_COLCHETE){
+            if (identificador.getSimbolo().getTipoDados() != TipoEnum.STRING)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             CASATOKEN(AlfabetoEnum.ABRE_COLCHETE);
-            EXP();
+            EXP(tipoExpDir, tamanhoExp, enderecoExp);
+            if (tipoExpDir.referencia != TipoEnum.INTEGER)
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            //long temporario = novoEnderecoTemporarios(tamanhoExp.referencia);
             CASATOKEN(AlfabetoEnum.FECHA_COLCHETE);
+            tipo.referencia = TipoEnum.CHAR;
+            tamanho.referencia = 1;
+            //endereco.referencia = temporario;
          }
       }else if(tokenLido.getTipoToken() == AlfabetoEnum.VALOR){
+         valor = tokenLido;
+         tipo.referencia = tokenLido.getTipoConstante();
+         tamanho.referencia = tokenLido.getTamanhoConstante();
          CASATOKEN(AlfabetoEnum.VALOR);
       } else {
          CASATOKEN(AlfabetoEnum.ABRE_PARENTESES);
-         EXP();
+         EXP(tipoExpDir, tamanhoExp, enderecoExp);
          CASATOKEN(AlfabetoEnum.FECHA_PARENTESES);
       }
+   }
+
+   private long novoEnderecoTemporarios(long bytes) {
+      TPCompiladores.proximoTemporarioLivre += bytes;
+      return TPCompiladores.proximoTemporarioLivre - bytes;
+   }
+
+   private String enderecoParaHexa(long endereco) {
+      return "0x" + Long.toHexString(endereco);
    }
 }
 
@@ -732,7 +955,7 @@ class TabelaSimbolos {
  *  ENUM PARA OS TIPOS
  */
 enum TipoEnum {
-   INTEGER, REAL, CHAR, STRING, BOOLEAN, NULL;
+   INTEGER, REAL, CHAR, STRING, BOOLEAN, NULL, BOOL;
 }
 
 /*
@@ -1138,18 +1361,18 @@ class AnalisadorLexico {
                }
                break;
          
-               case HEXADECIMAL1:
-                  if (hexadecimalH(caracterAnalisado)) {
-                     estado = Estados.HEXADECIMAL2;
-                  } else if(letra(caracterAnalisado)) {
-                     estado = Estados.IDENTIFICADOR;
-                  }
-                  else if(digito(caracterAnalisado)){
-                     estado = Estados.DIGITO;
-                  } else {
-                     throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
-                  }
-                  break;
+            case HEXADECIMAL1:
+               if (hexadecimalH(caracterAnalisado)) {
+                  estado = Estados.HEXADECIMAL2;
+               } else if(letra(caracterAnalisado)) {
+                  estado = Estados.IDENTIFICADOR;
+               }
+               else if(digito(caracterAnalisado)){
+                  estado = Estados.DIGITO;
+               } else {
+                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
+               }
+               break;
             
             case HEXADECIMAL2:
                if(letra(caracterAnalisado) ||digito(caracterAnalisado) ){
