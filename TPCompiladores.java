@@ -404,6 +404,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
       
    }
 
+
    //CMD_R -> WHILE EXP (CMD | 'BEGIN' {CMD} 'END')
    public void CMD_R() throws ErroPersonalizado, IOException{
       CASATOKEN(AlfabetoEnum.WHILE);
@@ -1415,9 +1416,18 @@ class AnalisadorLexico {
                }
                else if(digito(caracterAnalisado)){
                   estado = Estados.DIGITO;
-               } else {
+               } 
+               else if(lexema.contains("TRUE") || lexema.contains("FALSE")) {
+                  devolve = true;
+                  token.setTipoToken(AlfabetoEnum.VALOR);
+                  token.setLexema(lexema);
+                  token.setTipoConstante(TipoEnum.BOOLEAN);
+                  estado = Estados.FIM;
+               }
+               else {
                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
+
                break;
             
             case HEXADECIMAL2:
