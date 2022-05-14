@@ -89,6 +89,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
    */
 
    public static Token tokenLido;
+   public static boolean validador;
 
    //ANALISADOR RECEBE O TOKEN
    public AnalisadorSintatico(){
@@ -437,11 +438,16 @@ class AnalisadorSintatico extends AnalisadorLexico {
    //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
    public void CMD_T() throws ErroPersonalizado, IOException{
       CASATOKEN(AlfabetoEnum.IF);
+      validador = false;
       Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
       Referencia<Integer> tamanho = new Referencia<>(0);
       Referencia<Long> endereco = new Referencia<>(0L);
 
       EXP(tipoExp, tamanho, endereco);
+
+      if(validador){
+         tipoExp.referencia = TipoEnum.BOOL;
+      }
 
       if (tipoExp.referencia != TipoEnum.BOOL)
          throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
@@ -579,10 +585,12 @@ class AnalisadorSintatico extends AnalisadorLexico {
          }
 
          endereco.referencia = novoEnderecoTemporarios(4);
-
-         tipo.referencia = TipoEnum.BOOL;
          tamanho.referencia = 4;
+         validado = true;
+         tipo.referencia = TipoEnum.BOOL;
+
       }
+      
    }
 
    //SEXP -> [+ | -] T {(+ | - | OR) T}
@@ -1393,7 +1401,7 @@ class AnalisadorLexico {
                break;
          
             case HEXA_ID:
-               if(letraID2(caracterAnalisado)){
+               if(letraID2(caracterAnalisado) || digito(caracterAnalisado)){
                   estado = Estados.IDENTIFICADOR;
                } else if(hexadecimal(caracterAnalisado)){
                   estado = Estados.HEXADECIMAL1;
@@ -1431,7 +1439,7 @@ class AnalisadorLexico {
                break;
             
             case HEXADECIMAL2:
-               if(letra(caracterAnalisado) ||digito(caracterAnalisado) ){
+               if(letra(caracterAnalisado) || digito(caracterAnalisado) ){
                   estado = Estados.IDENTIFICADOR;
                } else {
                   devolve = true;
