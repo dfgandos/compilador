@@ -488,7 +488,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
   }
 
    //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
-   //CMD_T -> IF EXP (4) (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
+   //CMD_T -> IF EXP (4) (CMD | 'BEGIN' {CMD} 'END') (5) [else (CMD | 'BEGIN' {CMD} 'END')] (6)
    public void CMD_T() throws ErroPersonalizado, IOException{
       Simbolo auxExp = new Simbolo();
       CASATOKEN(AlfabetoEnum.IF);
@@ -523,6 +523,11 @@ class AnalisadorSintatico extends AnalisadorLexico {
       }else{
          CMD();
       }
+
+      String rotuloFimElse = Rotulos.geraRotulo();
+      arquivo.append(rotuloFimElse + ":\n");
+      arquivo.append(" jmp " + rotuloFimElse + "\n");
+      arquivo.append(rotuloFimElse + ":\n");
    
       if(tokenLido.getTipoToken() == AlfabetoEnum.ELSE){
          CASATOKEN(AlfabetoEnum.ELSE);
@@ -539,6 +544,8 @@ class AnalisadorSintatico extends AnalisadorLexico {
       }else{
          CMD();
       }
+      
+      arquivo.append(rotuloFimElse + ":");
    }
 
    //CMD_L -> READLN '('ID')'';
