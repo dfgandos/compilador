@@ -488,8 +488,11 @@ class AnalisadorSintatico extends AnalisadorLexico {
   }
 
    //CMD_T -> IF EXP (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
+   //CMD_T -> IF EXP (4) (CMD | 'BEGIN' {CMD} 'END') [else (CMD | 'BEGIN' {CMD} 'END')]
    public void CMD_T() throws ErroPersonalizado, IOException{
+      Simbolo auxExp = new Simbolo();
       CASATOKEN(AlfabetoEnum.IF);
+      Simbolo auxExp = new Simbolo();
       validador = false;
       Referencia<TipoEnum> tipoExp = new Referencia<>(TipoEnum.NULL);
       Referencia<Integer> tamanho = new Referencia<>(0);
@@ -503,6 +506,12 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
       if (tipoExp.referencia != TipoEnum.BOOL)
          throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+
+      String rotoloFimIf = Rotulos.geraRotulo();
+      arquivo.append(rotoloFimIf + ":\n");
+      arquivo.append("   mov eax, [M + " + auxExp.endereco + "]\n");
+      arquivo.append("   cmp eax, 0 \n");
+      arquivo.append("   je " + rotoloFimIf + "\n");
 
       if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
          CASATOKEN(AlfabetoEnum.BEGIN);
