@@ -12,6 +12,7 @@ public class TPCompiladores {
    public static PushbackReader leitura;
    public static int linhaPrograma = 1;
    public static long proximoTemporarioLivre = 0;
+   public static Writer arquivo;
 
    public static void main(String[] args) {
       
@@ -157,7 +158,21 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
    //PG -> {DEC | CMD} EOF
+   //PG -> (1) {DEC | CMD} EOF (2)
    public void PG() throws ErroPersonalizado, IOException{
+      String nome = "parte4.asm";
+      File f = new File(nome);
+      f.delete();
+
+      arquivo = new BufferedWriter(new FileWriter("parte4.asm", true));
+
+      arquivo.append("section .data\n");
+      arquivo.append("M:\n");
+      arquivo.append("   resb 10000h\n");
+      arquivo.append("section .text\n");
+      arquivo.append("global _start\n");
+      arquivo.append("_start:\n");
+
       while(verificaDEC() || verificaCMD()){
          if(verificaCMD()){
             CMD();
@@ -166,6 +181,11 @@ class AnalisadorSintatico extends AnalisadorLexico {
          }
       }
       CASATOKEN(AlfabetoEnum.EOF);
+
+      arquivo.append("   mov rax, 60\n");
+      arquivo.append("   mov rdi, 0\n");
+      arquivo.append("   syscall\n");
+      arquivo.close();
    }
 
    //DEC -> DEC_V | DEC_C
