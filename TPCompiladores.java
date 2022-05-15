@@ -315,6 +315,7 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
    //DEC_C -> CONST ID = [ [-] VALOR];
    //DEC_C -> CONST ID (5) = [ [-] VALOR];
+   //DEC_C -> CONST ID (5) = [ [-] VALOR] (3);
    public void DEC_C() throws ErroPersonalizado, IOException{
       boolean negacao = false;
       Token constante;
@@ -332,8 +333,11 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
       CASATOKEN(AlfabetoEnum.IGUAL);
 
+      String auxSIMB = "";
+
       if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
          negacao = true;
+         auxSIMB = lexema;
          CASATOKEN(AlfabetoEnum.MENOS); 
       }
 
@@ -346,6 +350,34 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
       tokenID.getSimbolo().setTipoClasse(ClasseEnum.CONSTANTE);
       tokenID.getSimbolo().setTipoDados(constante.getTipoConstante());
+
+      String auxCONS = tokenID.getLexema();
+      CASATOKEN(AlfabetoEnum.CONST);
+      arquivo.append("; Geracao de declaracao de constantes\n");
+      arquivo.append("section .data\n");
+
+      if(tipo.referencia == "INTERGER" || tipo.referencia == "REAL"){
+         if (auxSIMB == "") {
+            arquivo.append("   dd ");
+            arquivo.append(auxCONS);
+            arquivo.append("\n");
+         } else {
+            arquivo.append("   dd -");
+            arquivo.append(auxCONS);
+            arquivo.append("\n");
+         }
+      } else if (regLex.tipo == "char") {
+         arquivo.append("   db ");
+         arquivo.append(auxCONS);
+         arquivo.append("\n");
+      } else {
+         arquivo.append("   db ");
+         arquivo.append(auxCONS);
+         arquivo.append(", 0");
+         arquivo.append("\n");
+      }
+      arquivo.append("section .text\n");
+
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
    }
 
