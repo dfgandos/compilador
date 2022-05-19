@@ -1173,7 +1173,7 @@ class Token {
 enum Estados {
    INICIO, FIM, MENOR, MAIOR, IDENTIFICADOR, INICIO_COMENTARIO, FIM_COMENTARIO, COMENTARIO,
    PRIMEIRO_DECIMAL, DECIMAL, DIGITO, HEXADECIMAL1, DIVISAO,
-   HEXADECIMAL2, CARACTER1, CARACTER2, STRING, IGUAL, EXCLAMACAO, HEXA_ID; 
+   HEXADECIMAL2, CARACTER1, CARACTER2, CARACTER3, STRING, IGUAL, EXCLAMACAO, HEXA_ID; 
 } 
 
 /*
@@ -1561,13 +1561,18 @@ class AnalisadorLexico {
          
             case CARACTER2:
                if (caracterAnalisado == '\'') {
-                  token.setTipoToken(AlfabetoEnum.VALOR);
-                  token.setLexema(lexema);
-                  token.setTipoConstante(TipoEnum.CHAR);
-                  estado = Estados.FIM;
+                   estado = Estados.CARACTER3;
                } else {
-                  throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
+                   throw new ErroLexemaNaoIdentificado(TPCompiladores.getLinhaPrograma(), lexema);
                }
+               break;
+
+           case CARACTER3:
+               devolve = true;
+               token.setTipoToken(AlfabetoEnum.VALOR);
+               token.setLexema(lexema);
+               token.setTipoConstante(TipoEnum.CHAR);
+               estado = Estados.FIM;
                break;
          
             case PRIMEIRO_DECIMAL:
