@@ -1526,6 +1526,19 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
             TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
             TPCompiladores.assembly += "\tsyscall\n\n";
+            
+            String rotuloLimpaBuffer = geraRotulo();
+            long bufferAux = novoEnderecoTemporarios(1);
+            TPCompiladores.assembly += "; Limpa o buffer para a proxima leitura\n";
+            TPCompiladores.assembly += rotuloLimpaBuffer + ":\n";
+            TPCompiladores.assembly += "\tmov RDX, 1; Tamanho do buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereço do buffer\n";
+            TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
+            TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
+            TPCompiladores.assembly += "\tsyscall\n\n";
+            TPCompiladores.assembly += "\tmov AL,[M+" + enderecoParaHexa(bufferAux) + "]\n";
+            TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se é nova linha\n";
+            TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Lê o proximo se não for nova linha\n\n";
 
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.REAL) {
             rotulo = geraRotulo();
@@ -1659,17 +1672,6 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(identificador.getSimbolo().getEndereco()) + "], EAX ; Carrega o valor para o indentificador\n";
         }
 
-        String rotuloLimpaBuffer = geraRotulo();
-        long bufferAux = novoEnderecoTemporarios(1);
-        TPCompiladores.assembly += rotuloLimpaBuffer + ":\n";
-        TPCompiladores.assembly += "\tmov RDX, 1; Tamanho do buffer\n";
-        TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereço do buffer\n";
-        TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
-        TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
-        TPCompiladores.assembly += "\tsyscall\n\n";
-        TPCompiladores.assembly += "\tmov AL,[M+" + enderecoParaHexa(bufferAux) + "]\n";
-        TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se é nova linha\n";
-        TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Lê o proximo se não for nova linha\n\n";
     }
 
     private String enderecoParaHexa(long endereco) {
