@@ -226,8 +226,6 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 }
 
                 tokenID.getSimbolo().setEndereco(aloca_bytes(tokenID.getSimbolo().getTamanho()));
-
-
             }
 
             // Declaracao e atribuicao
@@ -251,9 +249,9 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         TPCompiladores.assembly += "\tresb 1 ; Declaração char\n";
                         break;
 					case BOOLEAN:
-					   tipoVariavel = TipoEnum.BOOLEAN;
-					   CASATOKEN(AlfabetoEnum.BOOLEAN);
-					   break;
+					    tokenID.getSimbolo().setTamanho(1);
+                        TPCompiladores.assembly += "\tresb 1 ; Declaração boolean\n";
+                        break;
                     default: // String
                         tokenID.getSimbolo().setTamanho(256);
                         TPCompiladores.assembly += "\tresb 256 ; Declaração String\n";
@@ -327,6 +325,10 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         case CHAR:
                             tokenID.getSimbolo().setTamanho(1);
                             TPCompiladores.assembly += "\tresb 1 ; Declaracao char\n";
+                            break;
+                        case BOOLEAN:
+                            tokenID.getSimbolo().setTamanho(1);
+                            TPCompiladores.assembly += "\tresb 1 ; Declaracao boolean\n";
                             break;
                         default: // String
                             tokenID.getSimbolo().setTamanho(256);
@@ -524,12 +526,17 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 TPCompiladores.assembly += "\tmovss XMM0, [M+" + enderecoParaHexa(endereco.referencia) + "] ; Moveu valor float para XMM0\n";
                 TPCompiladores.assembly += "\tmovss [M+" + enderecoParaHexa(tokenIdentificador.getSimbolo().getEndereco())
                         + "], XMM0 ; Coloca no identificador o valor float\n";
-            } else { // Int
+            } else if (tipoVariavel == TipoEnum.INTEGER) {
                 TPCompiladores.assembly += "; Atribuicao int\n";
                 TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(endereco.referencia) + "]\n";
                 TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(tokenIdentificador.getSimbolo().getEndereco())
                         + "], EAX\n";
-            }
+            } else {
+                TPCompiladores.assembly += "; Atribuicao boolean\n";
+                TPCompiladores.assembly += "\tmov AL, [M+" + enderecoParaHexa(endereco.referencia) + "]\n";
+                TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(tokenIdentificador.getSimbolo().getEndereco()) +
+                    "], AL\n";
+         }
         }
         CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
     }
@@ -552,7 +559,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         // Zera temporarios
         TPCompiladores.proximoTemporarioLivre = 0;
 
-        if (tipoExp.referencia != TipoEnum.BOOL)
+        if (tipoExp.referencia != TipoEnum.BOOLEAN)
             throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
         TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(endereco.referencia)
@@ -589,16 +596,15 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         // Zera temporarios
         TPCompiladores.proximoTemporarioLivre = 0;
 
-
-        if (tipoExp.referencia != TipoEnum.BOOL)
+        if (tipoExp.referencia != TipoEnum.BOOLEAN)
             throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
         String rotuloFalso = geraRotulo();
         String rotuloFim = geraRotulo();
 
         TPCompiladores.assembly += "; Inicio IF\n";
-        TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(endereco.referencia) + "]\n";
-        TPCompiladores.assembly += "\tcmp EAX, 0 ; Compara se a condicao e falsa\n";
+        TPCompiladores.assembly += "\tmov AL, [M+" + enderecoParaHexa(endereco.referencia) + "]\n";
+        TPCompiladores.assembly += "\tcmp AL, 0 ; Compara se a condicao e falsa\n";
         TPCompiladores.assembly += "\tje " + rotuloFalso + " ; Se for falsa salta\n";
 
         if(tokenLido.getTipoToken() == AlfabetoEnum.BEGIN){
@@ -685,7 +691,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         // Zera temporarios
         TPCompiladores.proximoTemporarioLivre = 0;
 
-        if (tipoExp.referencia == TipoEnum.BOOL)
+        if (tipoExp.referencia == TipoEnum.BOOLEAN)
             throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
         if(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA){
@@ -697,7 +703,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 EXP(tipoExp, tamanho, endereco);
 
                 TPCompiladores.proximoTemporarioLivre = 0;
-                if (tipoExp.referencia == TipoEnum.BOOL)
+                if (tipoExp.referencia == TipoEnum.BOOLEAN)
                     throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                 geraAssemblyWrite(tipoExp, endereco, tamanho);
@@ -742,30 +748,30 @@ public class AnalisadorSintatico extends AnalisadorLexico {
 
             switch (operador){
                 case IGUAL_IGUAL:
-                    if (tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.IGUAL_IGUAL);
                     break;
                 case DIFERENTE:
-                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.DIFERENTE);
                     break;
 
                 case MENOR:
-                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.MENOR);
                     break;
 
                 case MAIOR:
-                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.MAIOR);
                     break;
 
                 case MENOR_IGUAL:
-                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.MENOR_IGUAL);
                     break;
@@ -774,7 +780,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                  * MAIOR_IGUAL
                  */
                 default:
-                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOL)
+                    if (tipoExpsEsq.referencia == TipoEnum.STRING || tipoExpsEsq.referencia == TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.MAIOR_IGUAL);
                     break;
@@ -910,7 +916,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         + "], EAX ; Coloca no temporario se eh true ou false\n";
                 TPCompiladores.assembly += "; Fim exp\n";
             }
-            tipo.referencia = TipoEnum.BOOL;
+            tipo.referencia = TipoEnum.BOOLEAN;
             tamanho.referencia = 4;
 
         }
@@ -1002,35 +1008,35 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                     break;
 
                 default:
-                    if (tipo.referencia != TipoEnum.BOOL)
+                    if (tipo.referencia != TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     CASATOKEN(AlfabetoEnum.OR);
                     T(tipoExpDir, tamanho, endereco);
 
-                    if (tipoExpDir.referencia != TipoEnum.BOOL)
+                    if (tipoExpDir.referencia != TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     TPCompiladores.assembly += "; Operação OR\n";
-                    TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(tempExps) + "] ; Move T1 para EAX\n";
-                    TPCompiladores.assembly += "\tmov EBX, [M+" + enderecoParaHexa(endereco.referencia) + "] ; Move T2 para EBX\n\n";
+                    TPCompiladores.assembly += "\tmov AL, [M+" + enderecoParaHexa(tempExps) + "] ; Move T1 para AL\n";
+                    TPCompiladores.assembly += "\tmov BL, [M+" + enderecoParaHexa(endereco.referencia) + "] ; Move T2 para BL\n\n";
 
                     TPCompiladores.assembly += "; NOT A\n";
-                    TPCompiladores.assembly += "\tneg EAX\n";
-                    TPCompiladores.assembly += "\tadd EAX, 1\n\n";
+                    TPCompiladores.assembly += "\tneg AL\n";
+                    TPCompiladores.assembly += "\tadd AL, 1\n\n";
 
                     TPCompiladores.assembly += "; NOT B\n";
-                    TPCompiladores.assembly += "\tneg EBX\n";
-                    TPCompiladores.assembly += "\tadd EBX, 1\n\n";
+                    TPCompiladores.assembly += "\tneg BL\n";
+                    TPCompiladores.assembly += "\tadd BL, 1\n\n";
 
-                    TPCompiladores.assembly += "\timul EBX ; (NOT A) AND (NOT B)\n\n";
+                    TPCompiladores.assembly += "\timul BL ; (NOT A) AND (NOT B)\n\n";
 
                     TPCompiladores.assembly += "; NOT ((NOT A) AND (NOT B))\n";
-                    TPCompiladores.assembly += "\tneg EAX\n";
-                    TPCompiladores.assembly += "\tadd EAX, 1\n";
+                    TPCompiladores.assembly += "\tneg AL\n";
+                    TPCompiladores.assembly += "\tadd AL, 1\n";
 
                     TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp)
-                            + "], EAX ; Coloca no temporario resultado do OR\n";
+                            + "], AL ; Coloca no temporario resultado do OR\n";
 
                     break;
             }
@@ -1060,12 +1066,12 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     CASATOKEN(AlfabetoEnum.MULTIPLICACAO);
-                    F(tipo, tamanho, endereco);
+                    F(tipoExpDir, tamanho, endereco);
 
-                    /*if (tipo.referencia != tipoExpDir.referencia
+                    if (tipo.referencia != tipoExpDir.referencia
                             && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
                             && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
-                        throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());*/
+                        throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     geraAssemblyMultDivReal(tipo.referencia, tipoExpDir.referencia, tempExps, endereco.referencia, true,
                             enderecoTemp);
@@ -1076,11 +1082,11 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                     break;
 
                 case AND:
-                    if (tipo.referencia != TipoEnum.BOOL)
+                    if (tipo.referencia != TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                     CASATOKEN(AlfabetoEnum.AND);
 
-                    F(tipo, tamanho, endereco);
+                    F(tipoExpDir, tamanho, endereco);
 
                     TPCompiladores.assembly += "; AND\n";
                     TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(tempExps) + "] ; Moveu a F1 para EAX\n";
@@ -1088,7 +1094,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                     TPCompiladores.assembly += "\timul EBX ; Realiza EAX AND EBX\n";
                     TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EAX ; Coloca no temporario resultado da multiplicação\n";
 
-                    if (tipoExpDir.referencia != TipoEnum.BOOL)
+                    if (tipoExpDir.referencia != TipoEnum.BOOLEAN)
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     break;
@@ -1098,12 +1104,12 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     CASATOKEN(AlfabetoEnum.DIVISAO);
-                    F(tipo, tamanho, endereco);
+                    F(tipoExpDir, tamanho, endereco);
 
-                    /*if (tipo.referencia != tipoExpDir.referencia
+                    if (tipo.referencia != tipoExpDir.referencia
                             && (tipo.referencia != TipoEnum.INTEGER || tipoExpDir.referencia != TipoEnum.REAL)
                             && (tipo.referencia != TipoEnum.REAL || tipoExpDir.referencia != TipoEnum.INTEGER))
-                        throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());*/
+                        throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     geraAssemblyMultDivReal(tipo.referencia, tipoExpDir.referencia, tempExps, endereco.referencia, false,
                             enderecoTemp);
@@ -1122,7 +1128,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     CASATOKEN(AlfabetoEnum.BARRA_BARRA);
-                    F(tipo, tamanho, endereco);
+                    F(tipoExpDir, tamanho, endereco);
 
                     geraAssemblyDivMod(tempExps, endereco.referencia, true, enderecoTemp);
 
@@ -1137,7 +1143,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                     CASATOKEN(AlfabetoEnum.PORCENTAGEM);
-                    F(tipo, tamanho, endereco);
+                    F(tipoExpDir, tamanho, endereco);
 
                     geraAssemblyDivMod(tempExps, endereco.referencia, false, enderecoTemp);
 
@@ -1153,7 +1159,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         endereco.referencia = tempExps;
     }
 
-    //F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['(' EXP ')'] | VALOR
+    //F -> NOT F | INTEGER '(' EXP ')' | REAL '(' EXP ')' | '(' EXP ')' | ID ['[' EXP ']'] | VALOR
     public void F(Referencia<TipoEnum> tipo, Referencia<Integer> tamanho, Referencia<Long> endereco) throws ErroPersonalizado, IOException{
         boolean conversao = false;
         Referencia<TipoEnum> tipoExpDir = new Referencia<>(TipoEnum.NULL);
@@ -1208,7 +1214,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 CASATOKEN(AlfabetoEnum.NOT);
                 F(tipo, tamanho, endereco);
 
-                if (tipo.referencia != TipoEnum.BOOL)
+                if (tipo.referencia != TipoEnum.BOOLEAN)
                     throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
 
                 TPCompiladores.assembly += "; Nega um fator\n";
@@ -1235,9 +1241,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         TPCompiladores.assembly += "section .text\n";
                     } else if (tipo.referencia == TipoEnum.REAL) {
                         TPCompiladores.assembly += "section .data\n";
-                        if (valor.getTipoConstante() == TipoEnum.INTEGER)
-                            TPCompiladores.assembly += "\tdd " + valor.getLexema() + ".0 ; Declaração do float\n";
-                        else if (valor.getLexema().charAt(0) == '.')
+                        if (valor.getLexema().charAt(0) == '.')
                             TPCompiladores.assembly += "\tdd 0" + valor.getLexema() + " ; Declaração do float\n";
                         else
                             TPCompiladores.assembly += "\tdd " + valor.getLexema() + " ; Declaração do float\n";
@@ -1255,7 +1259,12 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                         // Precisa movimentar somente 1 byte
                         TPCompiladores.assembly += "\tmov BL, " + valor.getLexema() + " ; Coloca o carectere no BL\n";
                         TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(endereco.referencia) + "], BL ; Carrega para a memória o caractere\n";
-                    }
+                    } else if (tipo.referencia == TipoEnum.BOOLEAN) {
+                        // BL só tem 8 bits = 1 byte
+                        // Precisa movimentar somente 1 byte
+                        TPCompiladores.assembly += "\tmov BL, " + (valor.getLexema().contentEquals("TRUE") ? 1 : 0) + " ; Coloca o boolean no BL\n";
+                        TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(endereco.referencia) + "], BL ; Carrega para a memória o boolean\n";
+               }
                 }
                 break;
 
@@ -1507,7 +1516,6 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov DL, 0 ; Substitui quebra de linha por fim de string\n";
             TPCompiladores.assembly += "\tmov [RSI], DL ; Move fim de string para o identificador\n";
 
-
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.CHAR) {
             rotulo = geraRotulo();
             String rotuloFim = geraRotulo();
@@ -1518,19 +1526,6 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
             TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
             TPCompiladores.assembly += "\tsyscall\n\n";
-            
-            TPCompiladores.assembly += "; Limpa o Buffer para a proxima chamada\n";
-            String rotuloLimpaBuffer = geraRotulo();
-            long bufferAux = novoEnderecoTemporarios(1);
-            TPCompiladores.assembly += rotuloLimpaBuffer + ":\n";
-            TPCompiladores.assembly += "\tmov RDX, 1; Tamanho do buffer\n";
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereço do buffer\n";
-            TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
-            TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
-            TPCompiladores.assembly += "\tsyscall\n\n";
-            TPCompiladores.assembly += "\tmov AL,[M+" + enderecoParaHexa(bufferAux) + "]\n";
-            TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se é nova linha\n";
-            TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Lê o proximo se não for nova linha\n\n";
 
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.REAL) {
             rotulo = geraRotulo();
@@ -1663,6 +1658,18 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += rotulo3 + ":\n";
             TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(identificador.getSimbolo().getEndereco()) + "], EAX ; Carrega o valor para o indentificador\n";
         }
+
+        String rotuloLimpaBuffer = geraRotulo();
+        long bufferAux = novoEnderecoTemporarios(1);
+        TPCompiladores.assembly += rotuloLimpaBuffer + ":\n";
+        TPCompiladores.assembly += "\tmov RDX, 1; Tamanho do buffer\n";
+        TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereço do buffer\n";
+        TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
+        TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
+        TPCompiladores.assembly += "\tsyscall\n\n";
+        TPCompiladores.assembly += "\tmov AL,[M+" + enderecoParaHexa(bufferAux) + "]\n";
+        TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se é nova linha\n";
+        TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Lê o proximo se não for nova linha\n\n";
     }
 
     private String enderecoParaHexa(long endereco) {
@@ -1703,7 +1710,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 comando += " ;Atribuição char";
                 break;
 			case BOOLEAN:
-				comando += "\tdb " + tokenConstante.getLexema();
+				comando += "\tdb " + (tokenConstante.getLexema().contentEquals("TRUE") ? 1 : 0);
 				comando += " ;Atribuição boolean";
 				break;
             default:// String
