@@ -955,6 +955,10 @@ class AnalisadorSintatico extends AnalisadorLexico {
                tokenID.getSimbolo().setTamanho(1);
                TPCompiladores.assembly += "\tresb 1 ; Declaração char\n";
                break;
+            case BOOLEAN:
+               tipoVariavel = TipoEnum.BOOLEAN;
+               CASATOKEN(AlfabetoEnum.BOOLEAN);
+               break;
             default: // String
                tokenID.getSimbolo().setTamanho(256);
                TPCompiladores.assembly += "\tresb 256 ; Declaração String\n";
@@ -2394,6 +2398,10 @@ class AnalisadorSintatico extends AnalisadorLexico {
          case CHAR:
             comando += "\tdb " + tokenConstante.getLexema();
             comando += " ;Atribuição char";
+            break;
+         case BOOLEAN:
+            comando += "\tdb " + tokenConstante.getLexema();
+            comando += " ;Atribuição boolean";
             break;
          default: // String
             if (tokenConstante.getLexema().length() > 2) {
