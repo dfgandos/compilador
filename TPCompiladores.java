@@ -9,6 +9,8 @@ import java.io.*;
 
 public class TPCompiladores {
 
+   public static long proximoEnderecoLivre = 0x10000;
+   public static String assembly = "";
    public static PushbackReader leitura;
    public static int linhaPrograma = 1;
    public static long proximoTemporarioLivre = 0;
@@ -33,6 +35,10 @@ public class TPCompiladores {
          analisadorSintatico.inicializador();
          System.out.println(linhaPrograma + " linhas compiladas.");
          leitura.close();
+
+         BufferedWriter gravarArq = new BufferedWriter(new FileWriter("saida.asm"));
+      	gravarArq.write(assembly);
+      	gravarArq.close();
       
       } catch (Exception e) {
          String message = e.getMessage();
@@ -89,6 +95,167 @@ class AnalisadorSintatico extends AnalisadorLexico {
       F -> NOT F (18)| INTEGER '(' EXP ')'| REAL '(' EXP ')' | '(' EXP ')'(19) | ID (7)(21) ['(' EXP (9) ')'] | CONST (20)
    */
 
+   /*
+      S -> (DEC | CMD)* EOF
+      DEC -> DEC_VAR | DEC_CONST
+      DEC_VAR -> (INTEGER | REAL | CHAR | STRING) id (1) [<- [- (2)] valor (3)] {, id (4) [<- [- (5)] valor (6)]} ;
+      DEC_CONST -> const id (7) = [- (8)] valor (9) ;
+      CMD -> CMD_ATRI | CMD_REPEAT | CMD_TESTE | CMD_LER | CMD_ESCR | ;
+      CMD_ATRI -> id (10) [ (11)"[" EXP (12) "]"  ] <- EXP (13) ;
+      CMD_REPEAT -> while EXP (14) (CMD | "BEGIN" {CMD} "END" )
+      CMD_TESTE -> if EXP (15) (CMD | "BEGIN" {CMD} "END" ) [ else ( CMD | "BEGIN" {CMD} "END" ) ]
+      CMD_LER -> readln "(" id (16) ")" ;
+      CMD_ESCR -> (write | writeln) "(" EXP (17) {, EXP (18) } ")" ;
+      EXP ->  EXPS [ ( (19) = | (20) != | (21) < | (22) > | (23) <= | (24) >= ) EXPS (25) ]
+      EXPS -> [+ | -] (26) T (27) { ((28) + (29) | (30) - (31) | (32)"||" (33) ) T}
+      T -> F { ( (34) * (35) | (36) && (37) | (38) / (39) | (40) // (41) | (42) % (43) ) F }
+      F -> id (44) [ (45) "[" EXP (46) "]" ] | [INTEGER | REAL] (47) "(" EXP ")" (48) | ! F (49) | valor
+
+      DEC_VAR:
+      (1) if (id.simbolo.classe != null)
+            erro(Identificador ja declarado);
+      (2) negacao = true;
+      (3) if (negacao && valor.tipoConstante != INTEGER && valor.tipoConstante != REAL)
+            erro(Tipos incompativeis);
+      (4) if (id.simbolo.classe != null)
+            erro(Identificador ja declarado);
+      (5) negacao = true;
+      (6) if (negacao && valor.tipoConstante != INTEGER && valor.tipoConstante != REAL)
+            erro(Tipos incompativeis);
+         if (constante.tipoConstante != tipoVariavel && !(tipoVariavel == REAL && constante.tipoConstante == INTEGER))
+            erro(Tipos incompativeis);
+         id.simbolo.classe = varivavel;
+         id.simbolo.dados = valor.tipoConstante;
+         id.simbolo.tamanho = constante.tamanho;
+
+      DEC_CONST:
+      (7) if (id.simbolo.classe != null)
+            erro(Identificador ja declarado);
+      (8) negacao = true;
+      (9) if (negacao && valor.tipoConstante != INTEGER && valor.tipoConstante != REAL)
+            erro(Tipos incompativeis);
+
+      CMD_ATRI:
+      (10) if (id.simbolo.classe == CONSTANTE)
+            erro(Classe identificador incompativel);
+         if (id.simbolo.dados == null)
+            erro(Identificador nao declarado);
+      (11) if (id.simbolo.dados != STRING)
+            erro(Tipos incompativeis);
+      (12) if (exp.simbolo.dados != INTEGER)
+            erro(Tipos incompativeis);
+         id.simbolo.dados = CHAR;
+      (13) if (exp.simbolo.dados != id.simbolo.dados && !(id.simbolo.dados == REAL && exp.referencia == INTEGER))
+            erro(Tipos incompativeis);
+         id.simbolo.tamanho = exp.constante.tamanho;
+
+      CMD_REPEAT:
+      (14) if (exp.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+
+      CMD_TESTE:
+      (15) if (exp.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+            
+      CMD_LER:
+      (16) if (id.simbolo.classe == CONSTANTE)
+            erro(Classe identificador incompativel);
+         if (id.simbolo.dados == null)
+            erro(Identificador nao declarado);
+
+      CMD_ESCR:
+      (17) if (exp.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (18) if (exp.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+
+      EXP:
+      (19) if (expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (20) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (21) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (22) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (23) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (24) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == BOOLEAN)
+            erro(Tipos incompativeis);
+      (25) if (expEsq.simbolo.dados == STRING || expEsq.simbolo.dados == CHAR)
+            if (expEsq.simbolo.dados != expDir.simbolo.dados)
+                     erro(Tipos incompativeis);
+         else if (expEsq.simbolo.dados == INTEGER || expEsq.simbolo.dados == REAL)
+            if (expDir.simbolo.dados != INTEGER && expDir.referencia.dados != REAL)
+                     erro(Tipos incompativeis);
+         exp = BOOLEAN;
+         tamanho = 4;
+
+      EXPS:
+      (26) ehNumero = true;
+      (27) (ehNumero && exp.simbolo.dados != INTEGER && exp.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (28) if (exp.simbolo.dados != INTEGER && exp.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (29) if (exp.simbolo.dados != expDir.simbolo.dados && (exp.simbolo.dados != INTEGER || expDir.simbolo.dados != REAL) && (exp.simbolo.dados != REAL || expDir.simbolo.dados != INTEGER))
+            erro(Tipos incompativeis);
+         if (expDir.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (30) if (exp.simbolo.dados != INTEGER && exp.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (31) if (exp.simbolo.dados != expDir.simbolo.dados && (exp.simbolo.dados != INTEGER || expDir.simbolo.dados != REAL) && (exp.simbolo.dados != REAL || expDir.simbolo.dados != INTEGER))
+            erro(Tipos incompativeis);
+         if (expDir.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (32) if (exp.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+      (33) if (expDir.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+
+      T:
+      (34) if (exp.simbolo.dados != INTEGER && exp.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (35) if (exp.simbolo.dados != expDir.simbolo.dados && (exp.simbolo.dados != INTEGER || expDir.simbolo.dados != REAL) && (exp.simbolo.dados != REAL && expDir.simbolo.dados != INTEGER))
+            erro(Tipos incompativeis);
+         if (expDir.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (36) if (exp.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+      (37) if (expDir.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+      (38) if (exp.simbolo.dados != INTEGER && exp.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (39) if (exp.simbolo.dados != expDir.simbolo.dados && (exp.simbolo.dados != INTEGER || expDir.simbolo.dados != REAL) && (exp.simbolo.dados != REAL && expDir.simbolo.dados != INTEGER))
+            erro(Tipos incompativeis);
+         if (expDir.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+      (40) if (exp.simbolo.dados != INTEGER)
+            erro(Tipos incompativeis);
+      (41) if (exp.simbolo.dados != expDir.simbolo.dados)
+            erro(Tipos incompativeis);
+      (42) if (exp.simbolo.dados != INTEGER)
+            erro(Tipos incompativeis);
+      (43) if (exp.simbolo.dados != expDir.simbolo.dados)
+            erro(Tipos incompativeis);
+
+      F:
+      (44) if (id.simbolo.classe == null)
+            erro(Identificador nao declarado);
+      (45) if (id.simbolo.dados != STRING)
+            erro(Tipos incompativeis);
+      (46) if (exp.simbolo.dados != INTEGER)
+            erro(Tipos incompativeis)
+         f.simbolo.dados = CHAR;
+         tamanho = 1;
+      (47) conversao = true;
+      (48) if (conversao && expDir.simbolo.dados != INTEGER && expDir.simbolo.dados != REAL)
+            erro(Tipos incompativeis);
+         else
+            f.simbolo.dados = expDir.simbolo.dados;
+      (49) if (f.simbolo.dados != BOOLEAN)
+            erro(Tipos incompativeis);
+   */
+
    public static Token tokenLido;
    public static boolean validador;
 
@@ -112,9 +279,22 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
 
-   public void inicializador() throws ErroPersonalizado, IOException{
+   public void inicializador() throws ErroPersonalizado, IOException {
       tokenLido = AnalisadorLexico.obterProximoToken();
+      TPCompiladores.assembly += "section .data ; Sessão de dados\n";
+      TPCompiladores.assembly += "M: ; Rótulo para demarcar o\n";
+      TPCompiladores.assembly += "; início da sessão de dados\n";
+      TPCompiladores.assembly += "\tresb 0x10000 ; Reserva de temporários\n";
+      TPCompiladores.assembly += "; ***Definições de variáveis e constantes\n";
+      TPCompiladores.assembly += "section .text ; Sessão de código\n";
+      TPCompiladores.assembly += "global _start ; Ponto inicial do programa\n";
+      TPCompiladores.assembly += "_start: ; Início do programa\n";
+      TPCompiladores.assembly += "; ***Comandos\n";
       PG();
+      TPCompiladores.assembly += "; Halt\n";
+      TPCompiladores.assembly += "mov rax, 60 ; Chamada de saída\n";
+      TPCompiladores.assembly += "mov rdi, 0 ; Código de saida sem erros\n";
+      TPCompiladores.assembly += "syscall ; Chama o kernel\n";
    }
 
    public boolean verificaCMD() {
@@ -158,161 +338,213 @@ class AnalisadorSintatico extends AnalisadorLexico {
    }
 
    //PG -> {DEC | CMD} EOF
-   //PG -> (1) {DEC | CMD} EOF (2)
-   public void PG() throws ErroPersonalizado, IOException{
-      String nome = "parte4.asm";
-      File f = new File(nome);
-      f.delete();
 
-      arquivo = new BufferedWriter(new FileWriter("parte4.asm", true));
-
-      arquivo.append("section .data\n");
-      arquivo.append("M:\n");
-      arquivo.append("   resb 10000h\n");
-      arquivo.append("section .text\n");
-      arquivo.append("global _start\n");
-      arquivo.append("_start:\n");
-
-      while(verificaDEC() || verificaCMD()){
-         if(verificaCMD()){
-            CMD();
-         }else{
+   //PG -> {DEC | CMD} EOF
+   public void PG() throws ErroPersonalizado, IOException {
+      while (verificaDEC() || verificaCMD()) {
+         if (verificaDEC()) {
             DEC();
+         } else {
+            CMD();
          }
       }
       CASATOKEN(AlfabetoEnum.EOF);
-
-      arquivo.append("   mov rax, 60\n");
-      arquivo.append("   mov rdi, 0\n");
-      arquivo.append("   syscall\n");
-      arquivo.close();
    }
 
    //DEC -> DEC_V | DEC_C
-   public void DEC() throws ErroPersonalizado, IOException{
-      if(verificacCONST()){
+   public void DEC() throws ErroPersonalizado, IOException {
+      if (tokenLido.getTipoToken() == AlfabetoEnum.CONST) {
          DEC_C();
-      }else {
+      } else {
          DEC_V();
       }
    }
 
-   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
-   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID (1)(2) [ = [-] VALOR ] {, ID [ = [-] VALOR (3)(4) ] } ;
-   public void DEC_V() throws ErroPersonalizado, IOException{
-
+   //DEC -> DEC_V | DEC_C
+   public void DEC_V() throws ErroPersonalizado, IOException {
+   
       TipoEnum tipoVariavel;
       Token tokenID;
       boolean negacao = false;
-
+   
       switch (tokenLido.getTipoToken()) {
          case INTEGER:
             tipoVariavel = TipoEnum.INTEGER;
             CASATOKEN(AlfabetoEnum.INTEGER);
-         break;
-
+            break;
+      
          case REAL:
             tipoVariavel = TipoEnum.REAL;
             CASATOKEN(AlfabetoEnum.REAL);
-         break;
-
+            break;
+      
          case CHAR:
             tipoVariavel = TipoEnum.CHAR;
             CASATOKEN(AlfabetoEnum.CHAR);
-         break;
-
+            break;
+      
          case BOOLEAN:
             tipoVariavel = TipoEnum.BOOLEAN;
             CASATOKEN(AlfabetoEnum.BOOLEAN);
-         break;
-
+            break;
+      
          default:
             tipoVariavel = TipoEnum.STRING;
             CASATOKEN(AlfabetoEnum.STRING);
-         break;
+            break;
       }
-
+   
       tokenID = tokenLido;
       CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
-
-      if(tokenID.getSimbolo().getTipoClasse() != null){
+   
+   	/*
+   	 * REALIZA A VERIFICAÇÃO SE O IDENTIFICADOR FOI DECLARADO
+   	 */
+      if (tokenID.getSimbolo().getTipoClasse() != null) {
          throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
       }
-
+   
       tokenID.getSimbolo().setTipoClasse(ClasseEnum.VARIAVEL);
       tokenID.getSimbolo().setTipoDados(tipoVariavel);
-
-      if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
    
+      if (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL) {
+      
          CASATOKEN(AlfabetoEnum.IGUAL);
-
+      
          if (tokenLido.getTipoToken() == AlfabetoEnum.MENOS) {
             CASATOKEN(AlfabetoEnum.MENOS);
             negacao = true;
          }
-
+      
          Token tokenConstante = tokenLido;
          CASATOKEN(AlfabetoEnum.VALOR);
-
-         if(negacao && tokenConstante.getTipoConstante() != TipoEnum.INTEGER && 
-            tokenConstante.getTipoConstante() != TipoEnum.REAL){
+      
+         if (negacao && tokenConstante.getTipoConstante() != TipoEnum.INTEGER &&
+         	tokenConstante.getTipoConstante() != TipoEnum.REAL) {
             throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
          }
-
+      
          tokenID.getSimbolo().setTamanho(tokenConstante.getTamanhoConstante());
-         
-         if(!(tipoVariavel == TipoEnum.REAL && tokenConstante.getTipoConstante()  == TipoEnum.INTEGER)){
-            if(tipoVariavel != tokenConstante.getTipoConstante()){
+      
+         if (!(tipoVariavel == TipoEnum.REAL && tokenConstante.getTipoConstante() == TipoEnum.INTEGER)) {
+            if (tipoVariavel != tokenConstante.getTipoConstante()) {
                throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
             }
-         }  
-
-         while(tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
-            
-            negacao = false;
-            
-            CASATOKEN(AlfabetoEnum.VIRGULA);
-
-            tokenID = tokenLido;
-            CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
-
-            if(tokenID.getSimbolo().getTipoClasse()!= null){
-               throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
-            }
-
-            //NOVO ID, ATRIBUICAO DE CLASSE E TIPOS
-            tokenID.getSimbolo().setTipoClasse(ClasseEnum.VARIAVEL);
-            tokenID.getSimbolo().setTipoDados(tipoVariavel);
-
-            if(tokenLido.getTipoToken() == AlfabetoEnum.IGUAL){
-               CASATOKEN(AlfabetoEnum.IGUAL);
          
-               if(tokenLido.getTipoToken() == AlfabetoEnum.MENOS){
-                  CASATOKEN(AlfabetoEnum.MENOS);
-                  negacao = true;
-               }
-
-               Token tokenConstante2 = tokenLido;
-               CASATOKEN(AlfabetoEnum.VALOR);
-
-               if(negacao && tokenConstante2.getTipoConstante() != TipoEnum.INTEGER &&
-                  tokenConstante2.getTipoConstante() != TipoEnum.REAL){
+            tokenID.getSimbolo().setEndereco(aloca_bytes(tokenID.getSimbolo().getTamanho()));
+         
+         }
+      
+      	// Declaracao e atribuicao
+         TPCompiladores.assembly += "section .data\n";
+         TPCompiladores.assembly += obtemComandoAtribuicao(tokenID, tokenConstante, negacao);
+      
+      } else {
+      	// Somente declaracao
+         TPCompiladores.assembly += "section .data\n";
+         switch (tipoVariavel) {
+            case INTEGER:
+               tokenID.getSimbolo().setTamanho(4);
+               TPCompiladores.assembly += "\tresd 1 ; Declaração inteiro \n ";
+               break;
+            case REAL:
+               tokenID.getSimbolo().setTamanho(4);
+               TPCompiladores.assembly += "\tresd 1 ; Declaração real \n";
+               break;
+            case CHAR:
+               tokenID.getSimbolo().setTamanho(1);
+               TPCompiladores.assembly += "\tresb 1 ; Declaração char\n";
+               break;
+            default: // String
+               tokenID.getSimbolo().setTamanho(256);
+               TPCompiladores.assembly += "\tresb 256 ; Declaração String\n";
+         }
+      
+      	// Define o endereco do simbolo e incrementa o proximo endereco livre
+         tokenID.getSimbolo().setEndereco(aloca_bytes(tokenID.getSimbolo().getTamanho()));
+      }
+   
+      while (tokenLido.getTipoToken() == AlfabetoEnum.VIRGULA) {
+      
+         negacao = false;
+      
+         CASATOKEN(AlfabetoEnum.VIRGULA);
+      
+         tokenID = tokenLido;
+      
+         CASATOKEN(AlfabetoEnum.IDENTIFICADOR);
+      
+         if (tokenID.getSimbolo().getTipoClasse() != null) {
+            throw new ErroIdentificadorJaDeclarado(TPCompiladores.getLinhaPrograma(), tokenID.getLexema());
+         }
+      
+      	//NOVO ID, ATRIBUICAO DE CLASSE E TIPOS
+         tokenID.getSimbolo().setTipoClasse(ClasseEnum.VARIAVEL);
+         tokenID.getSimbolo().setTipoDados(tipoVariavel);
+      
+         if (tokenLido.getTipoToken() == AlfabetoEnum.IGUAL) {
+            CASATOKEN(AlfabetoEnum.IGUAL);
+         
+            if (tokenLido.getTipoToken() == AlfabetoEnum.MENOS) {
+               CASATOKEN(AlfabetoEnum.MENOS);
+               negacao = true;
+            }
+         
+            Token tokenConstante2 = tokenLido;
+            CASATOKEN(AlfabetoEnum.VALOR);
+         
+            if (negacao && tokenConstante2.getTipoConstante() != TipoEnum.INTEGER &&
+            	tokenConstante2.getTipoConstante() != TipoEnum.REAL) {
+               throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
+            }
+         
+            if (!(tipoVariavel == TipoEnum.REAL && tokenConstante2.getTipoConstante() == TipoEnum.INTEGER)) {
+               if (tipoVariavel != tokenConstante2.getTipoConstante()) {
                   throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
                }
-
-               if(!(tipoVariavel == TipoEnum.REAL && tokenConstante2.getTipoConstante() == TipoEnum.INTEGER)){
-                  if(tipoVariavel != tokenConstante2.getTipoConstante()){
-                     throw new ErroTiposIncompativeis(TPCompiladores.getLinhaPrograma());
-                  }
-               }
-               tokenID.getSimbolo().setTamanho(tokenConstante2.getTamanhoConstante());
-
             }
+            tokenID.getSimbolo().setTamanho(tokenConstante2.getTamanhoConstante());
+         
+         	// Declaracao e atribuicao
+         	// Compilador.assembly += "section .data\n";
+            TPCompiladores.assembly += obtemComandoAtribuicao(tokenID, tokenConstante2, negacao);
+         
+         	// Define o endereco do simbolo e incrementa o proximo endereco livre
+            tokenID.getSimbolo().setEndereco(aloca_bytes(tokenID.getSimbolo().getTamanho()));
+         
+         } else {
+         	// Compilador.assembly += "section .data\n";
+         	// Somente declaracao
+            switch (tipoVariavel) {
+               case INTEGER:
+                  tokenID.getSimbolo().setTamanho(4);
+                  TPCompiladores.assembly += "\tresd 1 ; Declaracao inteiro \n ";
+                  break;
+               case REAL:
+                  tokenID.getSimbolo().setTamanho(4);
+                  TPCompiladores.assembly += "\tresd 1 ; Declaracao float \n";
+                  break;
+               case CHAR:
+                  tokenID.getSimbolo().setTamanho(1);
+                  TPCompiladores.assembly += "\tresb 1 ; Declaracao char\n";
+                  break;
+               default: // String
+                  tokenID.getSimbolo().setTamanho(256);
+                  TPCompiladores.assembly += "\tresb 256 ; Declaracao String\n";
+            }
+         
+         	// Define o endereco do simbolo e incrementa o proximo endereco livre
+            tokenID.getSimbolo().setEndereco(aloca_bytes(tokenID.getSimbolo().getTamanho()));
+         
          }
       }
+   
       CASATOKEN(AlfabetoEnum.PONTO_VIRGULA);
+      TPCompiladores.assembly += "section .text ; Sessão de código\n";
    }
 
+   //DEC_V -> (INTEGER | REAL | STRING | BOOLEAN | CHAR ) ID [ = [-] VALOR ] {, ID [ = [-] VALOR ] } ;
+   
    //DEC_C -> CONST ID = [ [-] VALOR];
    //DEC_C -> CONST ID (5) = [ [-] VALOR];
    //DEC_C -> CONST ID (5) = [ [-] VALOR] (3);
@@ -856,6 +1088,43 @@ class AnalisadorSintatico extends AnalisadorLexico {
 
    private String enderecoParaHexa(long endereco) {
       return "0x" + Long.toHexString(endereco);
+   }
+
+   private long aloca_bytes(int bytes) {
+      TPCompiladores.proximoEnderecoLivre += (long) bytes;
+      return TPCompiladores.proximoEnderecoLivre - (long) bytes;
+   }
+
+   private String obtemComandoAtribuicao(Token tokenIdentificador, Token tokenConstante, boolean negacao) {
+      String comando = "";
+      switch (tokenIdentificador.getSimbolo().getTipoDados()) {
+         case REAL:
+            if (tokenConstante.getTipoConstante() == TipoEnum.INTEGER)
+               comando += "\tdd " + tokenConstante.getLexema() + ".0 ; Atribuição do real\n";
+            else if (tokenConstante.getLexema().charAt(0) == '.')
+               comando += "\tdd 0" + tokenConstante.getLexema() + " ; Atribuição do real\n";
+            else
+               comando += "\tdd " + tokenConstante.getLexema() + " ; Atribuição do real\n";
+            break;
+         case INTEGER:
+            comando = negacao ? "\tdd -" + tokenConstante.getLexema() : "\tdd " + tokenConstante.getLexema();
+            comando += " ; Atribuição " + tokenIdentificador.getSimbolo().getTipoDados().name();
+            break;
+         case CHAR:
+            comando += "\tdb " + tokenConstante.getLexema();
+            comando += " ;Atribuição char";
+            break;
+         default: // String
+            if (tokenConstante.getLexema().length() > 2) {
+               comando += "\tdb " + tokenConstante.getLexema() + ", 0";
+            } else {
+               comando += "\tdb 0";
+            }
+         
+            break;
+      }
+      comando += "\n";
+      return comando;
    }
 }
 
