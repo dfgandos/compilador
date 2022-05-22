@@ -248,11 +248,10 @@ public class AnalisadorSintatico extends AnalisadorLexico {
 
     /*
 	* Funcao auxiliar criada para verificação de constante
-    */
-    /*
+    */    
     public boolean verificacCONST(){
         return(tokenLido.getTipoToken() == AlfabetoEnum.CONST);
-    }*/
+    }
 
     /*
 	* Funcao auxiliar criada para verificação para chamada do comando de atrbuicao
@@ -305,11 +304,14 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR || tokenLido.getTipoToken() == AlfabetoEnum.MENOR_IGUAL || tokenLido.getTipoToken() == AlfabetoEnum.MAIOR_IGUAL);
     }
 
+    
     /*
+    * Funcao auxiliar criada para verificação dos operadores de expressão
+    */
     private boolean verificaEXPS(){
         return (tokenLido.getTipoToken() == AlfabetoEnum.MAIS || tokenLido.getTipoToken() == AlfabetoEnum.MENOS
                 || tokenLido.getTipoToken() == AlfabetoEnum.OR);
-    }*/
+    }
 
     //PG -> {DEC | CMD} EOF
     public void PG() throws ErroPersonalizado, IOException{
