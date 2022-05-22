@@ -1528,6 +1528,9 @@ public class AnalisadorSintatico extends AnalisadorLexico {
 
     /* Metodo assembly para escrita */
     private void geraAssemblyWrite(Referencia<TipoEnum> tipoExp, Referencia<Long> endereco, Referencia<Integer> tamanho) {
+        /* 
+        * Declaracao dos rotulos que serao utilizados
+        */
         String rotulo;
         String buffer;
         /* String */
@@ -1537,6 +1540,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(endereco.referencia)
                     + " ; Move o endereco da string para o registrador fonte\n";
             TPCompiladores.assembly += "\tmov RDX, RSI ; Recupera o endereco inicial da string\n";
+            /* Cria um novo rotulo */
             rotulo = geraRotulo();
             TPCompiladores.assembly += rotulo + ": ; Loop para o calculo do tamanho\n";
             TPCompiladores.assembly += "\tmov AL, [RDX] ; Le o caractere atual\n";
@@ -1564,6 +1568,9 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         /* Real */
         } else if (tipoExp.referencia == TipoEnum.REAL) {
             rotulo = geraRotulo();
+            /* 
+        	* Declaracao dos rotulos que serao utilizados
+        	*/
             String rotulo1, rotulo2, rotulo3, rotulo4;
             buffer = enderecoParaHexa(novoEnderecoTemporarios(4));
             TPCompiladores.assembly += "; Impressao REAL\n";
@@ -1586,6 +1593,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\troundss XMM1, XMM0, 0b0011 ; Parte inteira de XMM1\n";
             TPCompiladores.assembly += "\tsubss XMM0, XMM1 ; Parte fracionaria de XMM0\n";
             TPCompiladores.assembly += "\tcvtss2si RAX, XMM1 ; Convertido para int\n";
+            /* Cria um novo rotulo */
             rotulo1 = geraRotulo();
             TPCompiladores.assembly += "; Converte parte inteira que esta em RAX\n";
             TPCompiladores.assembly += rotulo1 + ":\n";
@@ -1596,6 +1604,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tcmp EAX, 0 ; Compara se quociente e 0\n";
             TPCompiladores.assembly += "\tjne " + rotulo1 + " ; Se nao e 0, continua\n";
             TPCompiladores.assembly += "\tsub RDI, RCX ; Decrementa precisao\n\n";
+            /* Cria um novo rotulo */
             rotulo2 = geraRotulo();
             TPCompiladores.assembly += "; Agora, desempilha valores e escreve parte inteira\n";
             TPCompiladores.assembly += rotulo2 + ":\n";
@@ -1609,6 +1618,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tmov DL, '.' ; Escreve ponto decimal\n";
             TPCompiladores.assembly += "\tmov [RSI], DL ; Armazena ponto\n";
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa base\n\n";
+            /* Cria um novo rotulo */
             rotulo3 = geraRotulo();
             rotulo4 = geraRotulo();
             TPCompiladores.assembly += "; Converte para fracionaria que esta em XMM0\n";
@@ -1685,8 +1695,8 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         
         String rotulo;
         long buffer;
-
         TPCompiladores.assembly += "; Leitura\n\n";
+        /* String */
         if (identificador.getSimbolo().getTipoDados() == TipoEnum.STRING) {
             rotulo = geraRotulo();
             String rotuloFim = geraRotulo();
@@ -1709,6 +1719,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += rotuloFim + ":\n";
             TPCompiladores.assembly += "\tmov DL, 0 ; Substitui quebra de linha por fim de string\n";
             TPCompiladores.assembly += "\tmov [RSI], DL ; Move fim de string para o identificador\n";
+        /* Char */
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.CHAR) {
             rotulo = geraRotulo();
             String rotuloFim = geraRotulo();
@@ -1723,54 +1734,49 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "; Limpa o buffer para a proxima leitura\n";
             TPCompiladores.assembly += rotuloLimpaBuffer + ":\n";
             TPCompiladores.assembly += "\tmov RDX, 1; Tamanho do buffer\n";
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereço do buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(bufferAux) + " ; Salva o endereco do buffer\n";
             TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
             TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
             TPCompiladores.assembly += "\tsyscall\n\n";
             TPCompiladores.assembly += "\tmov AL,[M+" + enderecoParaHexa(bufferAux) + "]\n";
-            TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se é nova linha\n";
-            TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Lê o proximo se não for nova linha\n\n";
-
+            TPCompiladores.assembly += "\tcmp AL, 0xA  ; Verifica se e nova linha\n";
+            TPCompiladores.assembly += "\tjne " + rotuloLimpaBuffer + "; Le o proximo se nao for nova linha\n\n";
+        /* Real */
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.REAL) {
             rotulo = geraRotulo();
             String rotulo2, rotulo3;
             buffer = novoEnderecoTemporarios(27);
-
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Salva o endereço do buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Salva o endereco do buffer\n";
             TPCompiladores.assembly += "\tmov RDX, 27; Tamanho do buffer\n";
             TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
             TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
             TPCompiladores.assembly += "\tsyscall\n\n";
-
             TPCompiladores.assembly += "; Leitura REAL\n";
             TPCompiladores.assembly += "\tmov RAX, 0 ; Zerando acumulador da parte inteira\n";
-            TPCompiladores.assembly += "\tsubss XMM0, XMM0 ; Zerando acumulador da parte fracionária\n";
+            TPCompiladores.assembly += "\tsubss XMM0, XMM0 ; Zerando acumulador da parte fracionaria\n";
             TPCompiladores.assembly += "\tmov RBX, 0 ; Caractere\n";
             TPCompiladores.assembly += "\tmov RCX, 10 ; Base 10\n";
             TPCompiladores.assembly += "\tcvtsi2ss XMM3, RCX ; Convertendo 10 para REAL\n";
-            TPCompiladores.assembly += "\tmovss XMM2, XMM3 ; Potência de 10\n";
+            TPCompiladores.assembly += "\tmovss XMM2, XMM3 ; Potencia de 10\n";
             TPCompiladores.assembly += "\tmov RDX, 1 ; Armazena o sinal\n";
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Endereço do Buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Endereco do Buffer\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere para BL\n";
-            TPCompiladores.assembly += "\tcmp BL, '-' ; Sinal é - ?\n";
+            TPCompiladores.assembly += "\tcmp BL, '-' ; Sinal e - ?\n";
             TPCompiladores.assembly += "\tjne " + rotulo + " ; Se é diferente de -, salta\n";
-            TPCompiladores.assembly += "\tmov RDX, -1 ; Senão, armazena o -\n";
+            TPCompiladores.assembly += "\tmov RDX, -1 ; Senao, armazena o -\n";
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa o ponteiro da string, por conta do sinal -\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega o caractere para BL\n\n";
-
             TPCompiladores.assembly += rotulo + ":\n";
             TPCompiladores.assembly += "\tpush RDX ; Empilha sinal\n";
             TPCompiladores.assembly += "\tmov RDX, 0 ; Registrador da multiplicação\n\n";
-
             rotulo = geraRotulo();
             rotulo2 = geraRotulo();
             rotulo3 = geraRotulo();
-
-            TPCompiladores.assembly += "; Loop Inteiro - Lendo caractere a carectere do número\n";
+            TPCompiladores.assembly += "; Loop Inteiro - Lendo caractere a carectere do numero\n";
             TPCompiladores.assembly += rotulo + ":\n";
             TPCompiladores.assembly += "\tcmp BL, 0Ah ; Verifica fim da string\n";
             TPCompiladores.assembly += "\tje " + rotulo2 + " ; Salta se fim da string\n";
-            TPCompiladores.assembly += "\tcmp BL, '.' ; Senão verifica ponto\n";
+            TPCompiladores.assembly += "\tcmp BL, '.' ; Senao verifica ponto\n";
             TPCompiladores.assembly += "\tje " + rotulo3 + " ; Salta se ponto\n";
             TPCompiladores.assembly += "\t; Pega o ECX e arrasta para a esquerda - Shift de base 10\n";
             TPCompiladores.assembly += "\timul ECX ; Multiplica EAX por 10\n";
@@ -1779,8 +1785,7 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa ponteiro\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere para BL\n";
             TPCompiladores.assembly += "\tjmp " + rotulo + "; Loop\n\n";
-
-            TPCompiladores.assembly += "; Loop Real - Calcula parte fracionária em XMM0\n";
+            TPCompiladores.assembly += "; Loop Real - Calcula parte fracionaria em XMM0\n";
             TPCompiladores.assembly += rotulo3 + ":\n";
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa ponteiro da string, por conta do '.'\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere para BL\n";
@@ -1788,81 +1793,68 @@ public class AnalisadorSintatico extends AnalisadorLexico {
             TPCompiladores.assembly += "\tje " + rotulo2 + "; Salta se fim da string\n";
             TPCompiladores.assembly += "\tsub BL, '0' ; Converte caractere\n";
             TPCompiladores.assembly += "\tcvtsi2ss XMM1, RBX ; Converte o conteudo de RBX para real\n\n";
-
-            TPCompiladores.assembly += "; XMM2 está com o valor 10, dividindo transforma em uma número com casa decimal - Shift para Direita\n";
+            TPCompiladores.assembly += "; XMM2 esta com o valor 10, dividindo transforma em uma numero com casa decimal - Shift para Direita\n";
             TPCompiladores.assembly += "\tdivss XMM1, XMM2 ; Transforma casa decimal\n\n";
-
             TPCompiladores.assembly += "; Concatena o carectere obtido com o resto do número\n";
             TPCompiladores.assembly += "\taddss XMM0, XMM1 ; Soma acumulador\n\n";
-
             TPCompiladores.assembly += "; A medida que vai tendo casas decimais o valor de xmm2 deveria aumentar\n";
             TPCompiladores.assembly += "; para acompanhar as casas decimais que estão sendo lidas\n";
-            TPCompiladores.assembly += "\tmulss XMM2, XMM3 ; Atualiza potência\n";
+            TPCompiladores.assembly += "\tmulss XMM2, XMM3 ; Atualiza potencia\n";
             TPCompiladores.assembly += "\tjmp " + rotulo3 + " ; Loop\n\n";
-
             TPCompiladores.assembly += rotulo2 + ":\n";
             TPCompiladores.assembly += "\tcvtsi2ss XMM1, RAX ; Converte parte inteira para real\n";
-            TPCompiladores.assembly += "\taddss XMM0, XMM1 ; Soma parte fracionária\n";
+            TPCompiladores.assembly += "\taddss XMM0, XMM1 ; Soma parte fracionaria\n";
             TPCompiladores.assembly += "\tpop RCX ; Desempilha sinal\n";
             TPCompiladores.assembly += "\tcvtsi2ss XMM1, RCX ; Converte sinal para real\n";
             TPCompiladores.assembly += "\tmulss XMM0, XMM1 ; Multiplica o sinal\n";
-
             TPCompiladores.assembly += "\tmovss [M+" + enderecoParaHexa(identificador.getSimbolo().getEndereco()) + "], XMM0 ; Carrega o valor para o indentificador\n";
-
+        /* Inteiro */
         } else if (identificador.getSimbolo().getTipoDados() == TipoEnum.INTEGER) {
             rotulo = geraRotulo();
             String rotulo2, rotulo3;
             buffer = novoEnderecoTemporarios(27);
-
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Salva o endereço do buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Salva o endereco do buffer\n";
             TPCompiladores.assembly += "\tmov RDX, 27; Tamanho do buffer\n";
             TPCompiladores.assembly += "\tmov RAX, 0 ; Chamada para leitura\n";
             TPCompiladores.assembly += "\tmov RDI, 0 ; Leitura do teclado\n";
             TPCompiladores.assembly += "\tsyscall\n\n";
-
-            TPCompiladores.assembly += "; Leitura int\n";
+            TPCompiladores.assembly += "; Leitura inteiro\n";
             TPCompiladores.assembly += "\tmov EAX, 0 ; Acumulador\n";
             TPCompiladores.assembly += "\tmov EBX, 0 ; Caractere\n";
             TPCompiladores.assembly += "\tmov ECX, 10 ; Base 10\n";
             TPCompiladores.assembly += "\tmov DX, 1 ; Sinal\n";
-            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Endereço do Buffer\n";
+            TPCompiladores.assembly += "\tmov RSI, M+" + enderecoParaHexa(buffer) + " ; Endereco do Buffer\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere\n";
-            TPCompiladores.assembly += "\tcmp BL, '-' ; Compara se caractere é igual a -\n";
+            TPCompiladores.assembly += "\tcmp BL, '-' ; Compara se caractere e igual a -\n";
             TPCompiladores.assembly += "\tjne " + rotulo + " ; Se caractere diferente de - pula\n";
             TPCompiladores.assembly += "\tmov DX, -1 ; Armazena sinal -\n";
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa ponteiro string\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere -\n\n";
-
             TPCompiladores.assembly += "; Armazena o sinal na pilha\n";
             TPCompiladores.assembly += rotulo + ":\n";
             TPCompiladores.assembly += "\tpush DX ; Empilha sinal\n";
-            TPCompiladores.assembly += "\tmov EDX, 0 ; Registrador da multiplicação\n\n";
-
+            TPCompiladores.assembly += "\tmov EDX, 0 ; Registrador da multiplicacao\n\n";
             rotulo = geraRotulo();
             rotulo2 = geraRotulo();
             rotulo3 = geraRotulo();
-
             TPCompiladores.assembly += "; Loop Inteiro - Lendo caractere a carectere\n";
             TPCompiladores.assembly += rotulo + ":\n";
             TPCompiladores.assembly += "\tcmp BL, 0Ah ; Verifica fim da string\n";
             TPCompiladores.assembly += "\tje " + rotulo2 + " ; Salta se fim da string\n";
-            TPCompiladores.assembly += "\timul ECX ; Multiplica EAX por 10\n";
+            TPCompiladores.assembly += "\timul ECX ; Multiplica ECX por 10\n";
             TPCompiladores.assembly += "\tsub BL, '0' ; Converte caractere\n";
             TPCompiladores.assembly += "\tadd EAX, EBX ; Soma valor caractere\n";
             TPCompiladores.assembly += "\tadd RSI, 1 ; Incrementa ponteiro\n";
             TPCompiladores.assembly += "\tmov BL, [RSI] ; Carrega caractere\n";
             TPCompiladores.assembly += "\tjmp " + rotulo + " ; Loop\n\n";
-
             TPCompiladores.assembly += rotulo2 + ":\n";
             TPCompiladores.assembly += "\tpop CX ; Desempilha sinal\n";
             TPCompiladores.assembly += "\tcmp CX, 0 ; Compara o sinal com 0\n";
-            TPCompiladores.assembly += "\tjg " + rotulo3 + " ; Se o sinal é maior que zero pula\n";
-            TPCompiladores.assembly += "\tneg EAX ; Nega número\n";
-
+            TPCompiladores.assembly += "\tjg " + rotulo3 + " ; Se o sinal e maior que zero pula\n";
+            TPCompiladores.assembly += "\tneg EAX ; Nega numero\n";
             TPCompiladores.assembly += rotulo3 + ":\n";
             TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(identificador.getSimbolo().getEndereco()) + "], EAX ; Carrega o valor para o indentificador\n";
         }
-
     }
 
     private String enderecoParaHexa(long endereco) {
@@ -1888,23 +1880,23 @@ public class AnalisadorSintatico extends AnalisadorLexico {
         switch (tokenIdentificador.getSimbolo().getTipoDados()) {
             case REAL:
                 if (tokenConstante.getTipoConstante() == TipoEnum.INTEGER)
-                    comando += "\tdd " + tokenConstante.getLexema() + ".0 ; Atribuição do real\n";
+                    comando += "\tdd " + tokenConstante.getLexema() + ".0 ; Atribuicao do real\n";
                 else if (tokenConstante.getLexema().charAt(0) == '.')
-                    comando += "\tdd 0" + tokenConstante.getLexema() + " ; Atribuição do real\n";
+                    comando += "\tdd 0" + tokenConstante.getLexema() + " ; Atribuicao do real\n";
                 else
-                    comando += "\tdd " + tokenConstante.getLexema() + " ; Atribuição do real\n";
+                    comando += "\tdd " + tokenConstante.getLexema() + " ; Atribuicao do real\n";
                 break;
             case INTEGER:
                 comando = negacao ? "\tdd -" + tokenConstante.getLexema() : "\tdd " + tokenConstante.getLexema();
-                comando += " ; Atribuição " + tokenIdentificador.getSimbolo().getTipoDados().name();
+                comando += " ; Atribuicao " + tokenIdentificador.getSimbolo().getTipoDados().name();
                 break;
             case CHAR:
                 comando += "\tdb " + tokenConstante.getLexema();
-                comando += " ;Atribuição char";
+                comando += " ;Atribuicao char";
                 break;
 			case BOOLEAN:
 				comando += "\tdb " + (tokenConstante.getLexema().contentEquals("TRUE") ? 1 : 0);
-				comando += " ;Atribuição boolean";
+				comando += " ;Atribuicao boolean";
 				break;
             default:// String
                 if (tokenConstante.getLexema().length() > 2) {
@@ -1912,7 +1904,6 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 } else {
                     comando += "\tdb 0";
                 }
-
                 break;
         }
         comando += "\n";
@@ -1922,54 +1913,47 @@ public class AnalisadorSintatico extends AnalisadorLexico {
     private void geraAssemblyMaisMenos(TipoEnum expEsqRef, TipoEnum expDirRef, long expEsqEnd, long expDirEnd,
                                        boolean soma, long enderecoTemp) {
         TPCompiladores.assembly += "; Soma ou subtração de termos\n";
-
         if (expEsqRef == TipoEnum.INTEGER && expDirRef == TipoEnum.INTEGER) {
             TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a T1(int) para EAX\n";
             TPCompiladores.assembly += "\tmov EBX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2(int) para EBX\n";
             if (soma)
                 TPCompiladores.assembly += "\tadd EAX, EBX ; Realiza a soma do conteudo de EAX com EBX\n";
             else
-                TPCompiladores.assembly += "\tsub EAX, EBX ; Realiza a subtração do conteudo de EAX com EBX\n";
-
+                TPCompiladores.assembly += "\tsub EAX, EBX ; Realiza a subtracao do conteudo de EAX com EBX\n";
             TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp)
-                    + "], EAX ; Coloca no temporario resultado da soma ou subtração\n";
-
+                    + "], EAX ; Coloca no temporario resultado da soma ou subtracao\n";
         } else {
             if (expEsqRef == TipoEnum.INTEGER && expDirRef == TipoEnum.REAL) {
                 TPCompiladores.assembly += "\tmovss XMM1, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu T1 para XMM0\n";
-                TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a T2 para RAX\n";
-                TPCompiladores.assembly += "\tcvtsi2ss XMM0, EAX ; Converteu o numero de RAX em REAL\n";
-
+                TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a T2 para EAX\n";
+                TPCompiladores.assembly += "\tcvtsi2ss XMM0, EAX ; Converteu o numero de EAX em REAL\n";
             } else if (expEsqRef == TipoEnum.REAL && expDirRef == TipoEnum.INTEGER) {
                 TPCompiladores.assembly += "\tmovss XMM0, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu T1 para XMM0\n";
-                TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2 para RAX\n";
-                TPCompiladores.assembly += "\tcvtsi2ss XMM1, EAX ; Converteu o numero de RAX em REAL\n";
-
-            } else { // Ambos REAL
+                TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2 para EAX\n";
+                TPCompiladores.assembly += "\tcvtsi2ss XMM1, EAX ; Converteu o numero de EAX em REAL\n";
+            } else { 
+            	/* Real | Real */
                 TPCompiladores.assembly += "\tmovss XMM0, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu T1 para XMM0\n";
                 TPCompiladores.assembly += "\tmovss XMM1, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2 para XMM1\n";
-
             }
-
             if (soma)
                 TPCompiladores.assembly += "\taddss XMM0, XMM1 ; Realiza a soma do conteudo de XMM0 com XMM1\n";
             else
-                TPCompiladores.assembly += "\tsubss XMM0, XMM1 ; Realiza a subtração do conteudo de XMM0 com XMM1\n";
-
+                TPCompiladores.assembly += "\tsubss XMM0, XMM1 ; Realiza a subtracao do conteudo de XMM0 com XMM1\n";
             TPCompiladores.assembly += "\tmovss [M+" + enderecoParaHexa(enderecoTemp)
-                    + "], XMM0 ; Coloca no temporario o resultado da soma ou subtração\n";
+                    + "], XMM0 ; Coloca no temporario o resultado da soma ou subtracao\n";
         }
     }
 
+    /* Metodo assembly para divisao e multiplicacao */
     private void geraAssemblyMultDivReal(TipoEnum expEsqRef, TipoEnum expDirRef, long expEsqEnd, long expDirEnd, boolean mult, long enderecoTemp) {
-        TPCompiladores.assembly += "; Multiplicação ou Divisão de termos\n";
-
+        TPCompiladores.assembly += "; Multiplicacao ou Divisao de termos\n";
         if (expEsqRef == TipoEnum.INTEGER && expDirRef == TipoEnum.INTEGER) {
             if(mult) {
                 TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a F1(int) para EAX\n";
                 TPCompiladores.assembly += "\tmov EBX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a F2(int) para EBX\n";
-                TPCompiladores.assembly += "\timul EBX ; Realiza a multplicação de EAX com EBX\n";
-                TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EAX ; Coloca no temporario resultado da multiplicação\n";
+                TPCompiladores.assembly += "\timul EBX ; Realiza a multplicacao de EAX com EBX\n";
+                TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EAX ; Coloca no temporario resultado da multiplicacao\n";
             } else {
                 TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a F1(int) para EAX\n";
                 TPCompiladores.assembly += "\tmov EBX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a F2(int) para EBX\n";
@@ -1978,44 +1962,40 @@ public class AnalisadorSintatico extends AnalisadorLexico {
                 TPCompiladores.assembly += "\tdivss XMM0, XMM1 ; Realiza a divisão do conteudo de XMM0 com XMM1\n";
                 TPCompiladores.assembly += "\tmovss [M+" + enderecoParaHexa(enderecoTemp)+ "], XMM0 ; Coloca no temporario o resultado da divisão\n";
             }
-
         } else {
             if (expEsqRef == TipoEnum.INTEGER && expDirRef == TipoEnum.REAL) {
                 TPCompiladores.assembly += "\tmovss XMM1, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu T1 para XMM0\n";
                 TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a T2 para RAX\n";
                 TPCompiladores.assembly += "\tcvtsi2ss XMM0, EAX ; Converteu o numero de EAX em real\n";
-
             } else if (expEsqRef == TipoEnum.REAL && expDirRef == TipoEnum.INTEGER) {
                 TPCompiladores.assembly += "\tmovss XMM0, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu T1 para XMM0\n";
                 TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2 para RAX\n";
                 TPCompiladores.assembly += "\tcvtsi2ss XMM1, EAX ; Converteu o numero de EAX em real\n";
-
-            } else { // Ambos real
+            } else { 
+            	/* Real | Real */
                 TPCompiladores.assembly += "\tmovss XMM0, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu T1 para XMM0\n";
                 TPCompiladores.assembly += "\tmovss XMM1, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a T2 para XMM1\n";
-
             }
-
             if (mult)
-                TPCompiladores.assembly += "\tmulss XMM0, XMM1 ; Realiza a multiplicação do conteudo de XMM0 com XMM1\n";
+                TPCompiladores.assembly += "\tmulss XMM0, XMM1 ; Realiza a multiplicacao do conteudo de XMM0 com XMM1\n";
             else
-                TPCompiladores.assembly += "\tdivss XMM0, XMM1 ; Realiza a divisão do conteudo de XMM0 com XMM1\n";
-
+                TPCompiladores.assembly += "\tdivss XMM0, XMM1 ; Realiza a divisao do conteudo de XMM0 com XMM1\n";
             TPCompiladores.assembly += "\tmovss [M+" + enderecoParaHexa(enderecoTemp)
-                    + "], XMM0 ; Coloca no temporario o resultado da multiplicação ou divisão\n";
+                    + "], XMM0 ; Coloca no temporario o resultado da multiplicacao ou divisao\n";
         }
     }
 
+    /* Metodo assembly para divisao e mod */
     private void geraAssemblyDivMod(long expEsqEnd, long expDirEnd, boolean div, long enderecoTemp) {
         TPCompiladores.assembly += "; Divisao ou Mod de termos\n";
         TPCompiladores.assembly += "\tmov EAX, [M+" + enderecoParaHexa(expEsqEnd) + "] ; Moveu a F1(int) para EAX\n";
         TPCompiladores.assembly += "\tcdq\n";
         TPCompiladores.assembly += "\tmov EBX, [M+" + enderecoParaHexa(expDirEnd) + "] ; Moveu a F2(int) para EBX\n";
-        TPCompiladores.assembly += "\tidiv EBX ; Realiza a divisão de EAX com EBX\n";
+        TPCompiladores.assembly += "\tidiv EBX ; Realiza a divisao de EAX com EBX\n";
         if (div)
-            TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EAX ; Coloca no temporario o quociente da divisão\n";
+            TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EAX ; Coloca no temporario o quociente da divisao\n";
         else
-            TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EDX ; Coloca no temporario resto da divisão\n";
+            TPCompiladores.assembly += "\tmov [M+" + enderecoParaHexa(enderecoTemp) + "], EDX ; Coloca no temporario resto da divisao\n";
     }
 
 }
